@@ -378,5 +378,3 @@ main(void)
 	delete be_app;
 	return 0;
 }
-
-

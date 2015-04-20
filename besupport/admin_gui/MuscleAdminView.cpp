@@ -662,4 +662,3 @@ instantiate_deskbar_item(void)
 {
 	return new MuscleAdminReplicant(BRect(0, 0, 15, 15), B_FOLLOW_NONE, true);
 }
-

@@ -558,14 +558,15 @@ template<typename T> inline int muscleSgn(T arg) {return (arg<0)?-1:((arg>0)?1:0
 
 #endif  /* __cplusplus */
 
-/** muscleSprintf() expands to the most secure variant of sprintf() available on the current build platform */
 #if defined(__cplusplus) && (_MSC_VER >= 1400)
+/** For MSVC, we provide CRT-friendly versions of these functions to avoid security warnings */
 # define muscleSprintf  sprintf_s  /* Ooh, template magic! */
 # define muscleSnprintf sprintf_s  /* Yes, sprintf_s is correct here! (this version is usable when template magic isn't possible) -jaf */
 # define muscleStrcpy   strcpy_s   /* Ooh, template magic! */
 static inline char * muscleStrncpy(char * to, const char * from, size_t maxLen) {(void) strcpy_s(to, maxLen, from); return to;}
 static inline FILE * muscleFopen(const char * path, const char * mode) {FILE * fp; return (fopen_s(&fp, path, mode) == 0) ? fp : NULL;}
 #else
+/** Other OS's can use the usual functions instead. */
 # define muscleSprintf  sprintf
 # define muscleSnprintf snprintf
 # define muscleStrcpy   strcpy

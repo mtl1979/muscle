@@ -16,7 +16,7 @@
 
 #ifdef MUSCLE_USE_MSVC_STACKWALKER
 # include <dbghelp.h>
-# if defined(UNICODE) &&!defined(_UNICODE)
+# if defined(UNICODE) && !defined(_UNICODE)
 #  define _UNICODE 1
 # endif
 # include <tchar.h>

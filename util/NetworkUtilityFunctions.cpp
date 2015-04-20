@@ -1186,7 +1186,8 @@ status_t GetNetworkInterfaceInfos(Queue<NetworkInterfaceInfo> & results, uint32 
             if (IsGNIIBitMatch(unicastIP, isEnabled, includeBits))
             {
 #ifndef MUSCLE_AVOID_IPV6
-               unicastIP.SetInterfaceIndex(if_nametoindex(p->ifa_name));  // so the user can find out; it will be ignore by the TCP stack
+               // FogBugz #10519:  I'm not setting the interface index for ::1 because trying to send UDP packets to ::1@1 causes ENOROUTE errors under MacOS/X
+               if (unicastIP != localhostIP) unicastIP.SetInterfaceIndex(if_nametoindex(p->ifa_name));  // so the user can find out; it will be ignore by the TCP stack
 #endif
                if (results.AddTail(NetworkInterfaceInfo(p->ifa_name, "", unicastIP, netmask, broadcastIP, isEnabled, hasCopper)) == B_NO_ERROR)
                {

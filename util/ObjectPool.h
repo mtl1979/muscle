@@ -339,10 +339,8 @@ private:
       const Object & GetObject() const {return _object;}
       Object & GetObject() {return _object;}
 
-      ObjectNode * GetObjectNodeFromObjectPointer(Object * object) {return reinterpret_cast<ObjectNode *>(reinterpret_cast<uint8 *>(object)-((reinterpret_cast<uint8*>(&_object)-reinterpret_cast<uint8 *>(this))));}
-
    private:
-      Object _object;
+      Object _object;      // note:  MUST be the first object in the ObjectNode!
       uint16 _arrayIndex;
       uint16 _nextIndex;   // only valid when we are in the free list
    };
@@ -485,8 +483,6 @@ private:
          _data.GetUsageStats(min, max, total);
       }
 
-      ObjectNode * GetObjectNodeFromObjectPointer(Object * obj) {return _nodes[0].GetObjectNodeFromObjectPointer(obj);}
-
    private:
       friend class ObjectSlabData;
 
@@ -533,7 +529,7 @@ private:
    // an ObjectSlab that should be deleted outside of the critical section.
    ObjectSlab * ReleaseObjectAux(Object * obj)
    {
-      ObjectNode * objNode = _firstSlab ? _firstSlab->GetObjectNodeFromObjectPointer(obj) : NULL;
+      ObjectNode * objNode = reinterpret_cast<ObjectNode *>(obj);
       ObjectSlab * objSlab = reinterpret_cast<ObjectSlab *>(objNode-objNode->GetArrayIndex());
 
       objSlab->ReleaseObjectNode(objNode);  // guaranteed to work, since we know (obj) is in use in (objSlab)
