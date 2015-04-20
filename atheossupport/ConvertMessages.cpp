@@ -1,4 +1,4 @@
-/* This file is Copyright 2000-2013 Meyer Sound Laboratories Inc.  See the included LICENSE.txt file for details. */  
+/* This file is Copyright 2000-2013 Meyer Sound Laboratories Inc.  See the included LICENSE.txt file for details. */
 
 #include <gui/point.h>
 #include <gui/rect.h>
@@ -6,7 +6,7 @@
 
 namespace muscle {
 
-status_t ConvertToAMessage(const Message & from, os::Message & to) 
+status_t ConvertToAMessage(const Message & from, os::Message & to)
 {
    to.MakeEmpty();
    to.SetCode(from.what);
@@ -44,7 +44,7 @@ status_t ConvertToAMessage(const Message & from, os::Message & to)
                if (to.AddRect(n, brect) != B_NO_ERROR) return B_ERROR;
             }
             break;
- 
+
             case B_MESSAGE_TYPE:
             {
                const MessageRef * msgRef = static_cast<const MessageRef *>(nextItem);
@@ -64,7 +64,7 @@ status_t ConvertToAMessage(const Message & from, os::Message & to)
    return B_NO_ERROR;
 }
 
-status_t ConvertFromAMessage(const os::Message & from, Message & to) 
+status_t ConvertFromAMessage(const os::Message & from, Message & to)
 {
    to.Clear();
    to.what = from.GetCode();

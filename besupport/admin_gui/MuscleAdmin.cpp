@@ -86,8 +86,8 @@ MuscleAdmin::ReadyToRun()
 		isInstalled = deskbar.HasItem(kDeskbarItemName);
 	}
 
-	if (isDeskbarRunning && !isInstalled) {		
-		BAlert* alert = new BAlert("", 
+	if (isDeskbarRunning && !isInstalled) {
+		BAlert* alert = new BAlert("",
 			"You can run MuscleAdmin in a window or install it in the Deskbar."
 			, "Run in window", "Install in Deskbar", NULL, B_WIDTH_AS_USUAL,
 			B_WARNING_ALERT);

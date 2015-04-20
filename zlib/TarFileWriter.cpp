@@ -49,7 +49,7 @@ status_t TarFileWriter :: SetFile(const char * outputFileName, bool append)
       if (append == false) (void) DeleteFile(outputFileName);
 
       FILE * fpOut = muscleFopen(outputFileName, append?"ab":"wb");
-      if (fpOut) 
+      if (fpOut)
       {
          _writerIO.SetRef(newnothrow FileDataIO(fpOut));
          if (_writerIO()) return B_NO_ERROR;

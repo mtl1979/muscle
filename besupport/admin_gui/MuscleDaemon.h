@@ -19,7 +19,7 @@
 #define STR_MUSCLE_DEAMON_NAME "application/x-vnd.Haiku-MuscleDaemon"
 
 namespace muscle {
-	
+
 class App : public BApplication
 {
 public:
@@ -28,7 +28,7 @@ public:
 			bool		QuitRequested(void);
 			void		MessageReceived(BMessage *msg);
 	virtual void		ArgvReceived(int32 argc, char** argv);
-	
+
 private:
    uint32 maxBytes;
    uint32 maxNodesPerSession;
@@ -39,7 +39,7 @@ private:
    uint32 maxSessions;
    uint32 maxSessionsPerHost;
    String* fprivateKeyFilePath;
-		
+
    int retVal;
    ReflectServer server;
 

@@ -16,15 +16,15 @@ NAME = muscle_server
 #	DRIVER: Kernel Driver
 TYPE = APP
 
-# 	if you plan to use localization features 
+# 	if you plan to use localization features
 # 	specify the application MIME siganture
-APP_MIME_SIG = 
+APP_MIME_SIG =
 
 #	add support for new Pe and Eddie features
 #	to fill in generic makefile
 
 #%{
-# @src->@ 
+# @src->@
 
 #	specify the source files to use
 #	full paths or paths relative to the makefile can be included
@@ -94,17 +94,17 @@ SRCS += ../../zlib/zlib/inffast.c
 
 #Aktivate ssl
 #SSLSocketDataIO.o SSLSocketAdapterGateway.o
-   
+
 #	specify the resource definition files to use
 #	full path or a relative path to the resource file can be used.
 RDEFS = muscled.rdef
-	
-#	specify the resource files to use. 
+
+#	specify the resource files to use.
 #	full path or a relative path to the resource file can be used.
 #	both RDEFS and RSRCS can be defined in the same makefile.
-RSRCS = 
+RSRCS =
 
-# @<-src@ 
+# @<-src@
 #%}
 
 #	end support for Pe and Eddie
@@ -120,7 +120,7 @@ RSRCS =
 #
 #	-	for localization support add following libs:
 #SRCS += locale localestub
-#SRCS += 
+#SRCS +=
 #	- 	if your library does not follow the standard library
 #SRCS += naming scheme you need to specify the path to the library
 #SRCS += and it's name
@@ -134,7 +134,7 @@ LIBS = be root network stdc++
 #	be recursive, so include all of the paths where libraries can
 #	be found.  Directories where source files are found are
 #	automatically included.
-LIBPATHS = 
+LIBPATHS =
 
 #	additional paths to look for system headers
 #	thes use the form: #include <header>
@@ -147,8 +147,8 @@ SYSTEM_INCLUDE_PATHS = /boot/system/develop/headers/private/interface
 LOCAL_INCLUDE_PATHS += ../../../muscle
 LOCAL_INCLUDE_PATHS += ../../zlib/zlib ../../message ../../besupport
 LOCAL_INCLUDE_PATHS += ../../dataio ../../iogateway ../../reflector
-LOCAL_INCLUDE_PATHS += ../../regex ../../util ../../syslog 
-LOCAL_INCLUDE_PATHS += ../../system ../../zlib ../../zlib/zlib 
+LOCAL_INCLUDE_PATHS += ../../regex ../../util ../../syslog
+LOCAL_INCLUDE_PATHS += ../../system ../../zlib ../../zlib/zlib
 
 #	specify the level of optimization that you desire
 #	NONE, SOME, FULL
@@ -187,7 +187,7 @@ WARNINGS = ALL
 #	specify whether image symbols will be created
 #	so that stack crawls in the debugger are meaningful
 #	if TRUE symbols will be created
-SYMBOLS = 
+SYMBOLS =
 
 #	specify debug settings
 #	if TRUE will allow application to be run from a source-level
@@ -202,16 +202,16 @@ COMPILER_FLAGS = -fno-exceptions -DMUSCLE_NO_EXCEPTIONS -W -Wall -Wno-multichar
 LINKER_FLAGS =
 
 #	specify the version of this particular item
-#	(for example, -app 3 4 0 d 0 -short 340 -long "340 "`echo -n -e '\302\251'`"1999 GNU GPL") 
+#	(for example, -app 3 4 0 d 0 -short 340 -long "340 "`echo -n -e '\302\251'`"1999 GNU GPL")
 #	This may also be specified in a resource.
-APP_VERSION = 
+APP_VERSION =
 
 #	(for TYPE == DRIVER only) Specify desired location of driver in the /dev
 #	hierarchy. Used by the driverinstall rule. E.g., DRIVER_PATH = video/usb will
 #	instruct the driverinstall rule to place a symlink to your driver's binary in
 #	~/add-ons/kernel/drivers/dev/video/usb, so that your driver will appear at
 #	/dev/video/usb when loaded. Default is "misc".
-DRIVER_PATH = 
+DRIVER_PATH =
 
 ## include the makefile-engine
 DEVEL_DIRECTORY := \

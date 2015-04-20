@@ -1,4 +1,4 @@
-/* This file is Copyright 2000-2013 Meyer Sound Laboratories Inc.  See the included LICENSE.txt file for details. */  
+/* This file is Copyright 2000-2013 Meyer Sound Laboratories Inc.  See the included LICENSE.txt file for details. */
 
 #include <stdio.h>
 #include "support/MuscleSupport.h"
@@ -17,7 +17,7 @@ static void testStr(const char * title, const char * gen, const char * expected)
 }
 
 // This program makes sure that the MUSCLE typedefs have the proper bit-widths.
-int main(int, char **) 
+int main(int, char **)
 {
    printf("Testing MUSCLE typedefs to make sure they are defined to the correct bit-widths...\n");
    if (sizeof(void *) == sizeof(uintptr)) printf("uintptr:  pass, sizeof(uintptr)=%i, sizeof(void *)=%i\n", (int)sizeof(uintptr), (int)sizeof(void *));

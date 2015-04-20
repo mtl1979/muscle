@@ -9,7 +9,7 @@
 # include "zlib/zlib/zlib.h"
 
 namespace muscle {
- 
+
 /** This class is a handy wrapper around the zlib C functions.
   * It quickly and easily inflates and deflates data to/from independently compressed chunks.
   */

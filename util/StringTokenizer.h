@@ -9,14 +9,14 @@ namespace muscle {
 
 /** String tokenizer class, similar to Java's java.util.StringTokenizer.  This class is used
   * to interpret a specified character string as a series of sub-strings, with each sub-string
-  * differentiated from its neighbors by the presence of one or more of the specified separator-tokens 
+  * differentiated from its neighbors by the presence of one or more of the specified separator-tokens
   * between the two sub-strings.
   */
 class StringTokenizer MUSCLE_FINAL_CLASS
 {
 public:
-   /** Initializes the StringTokenizer to parse (tokenizeMe), which 
-    *  should be a string of tokens (e.g. words) separated by any 
+   /** Initializes the StringTokenizer to parse (tokenizeMe), which
+    *  should be a string of tokens (e.g. words) separated by any
     *  of the characters specified in (separators)
     *  @param tokenizeMe the string to break up into 'words'.
     *  @param separators ASCII string representing a list of characters to interpret a substring-separators.
@@ -26,7 +26,7 @@ public:
    {
       int tlen = (int) strlen(tokenizeMe);
       int slen = (int) strlen(separators);
- 
+
       int tempLen = slen+1+tlen+1;
       char * temp = newnothrow_array(char, tempLen);
       if (temp)
@@ -36,12 +36,12 @@ public:
          _next = temp + slen + 1;
          muscleStrncpy(_next, tokenizeMe, tempLen-(slen+1));
       }
-      else 
+      else
       {
          _seps = _next = NULL;
          WARN_OUT_OF_MEMORY;
       }
- 
+
       _alloced = true;
    }
 
@@ -81,7 +81,7 @@ public:
 
             // Move until next sep-char
             while((*_next)&&(strchr(_seps, *_next) == NULL)) _next++;
-            if (*_next) 
+            if (*_next)
             {
                *_next = '\0';
                _next++;
@@ -94,7 +94,7 @@ public:
 
    /** Convenience synonym for GetNextToken() */
    char * operator()() {return GetNextToken();}
- 
+
    /** Returns the remainder of the string, starting with the next token,
     *  or NULL if there are no more tokens in the string.
     *  Doesn't affect the next return value of GetNextToken(), though.

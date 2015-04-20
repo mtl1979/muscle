@@ -4,9 +4,9 @@
  *
  * Author:
  *		DarkWyrm <darkwyrm@earthlink.net>
- *		
+ *
  * Using Haiku ServicesDaemon
- * 
+ *
  * Author:
  *		Fredrik Modéen
  *
@@ -58,8 +58,8 @@ App::App(void)
 
 	SetCPlusPlusGlobalMemoryAllocator(MemoryAllocatorRef(&usageLimitAllocator, false));
 	SetCPlusPlusGlobalMemoryAllocator(MemoryAllocatorRef());  // unset, so that none of our allocator objects will be used after they are gone
-	
-	if ((maxBytes != MUSCLE_NO_LIMIT) && (&usageLimitAllocator)) 
+
+	if ((maxBytes != MUSCLE_NO_LIMIT) && (&usageLimitAllocator))
 		usageLimitAllocator.SetMaxNumBytes(maxBytes);
 #endif
 
@@ -67,10 +67,10 @@ App::App(void)
 
 	server.GetAddressRemappingTable() = tempRemaps;
 
-	if (maxNodesPerSession != MUSCLE_NO_LIMIT) 
+	if (maxNodesPerSession != MUSCLE_NO_LIMIT)
 		server.GetCentralState().AddInt32(PR_NAME_MAX_NODES_PER_SESSION, maxNodesPerSession);
-	
-	for (MessageFieldNameIterator iter = tempPrivs.GetFieldNameIterator(); iter.HasData(); iter++) 
+
+	for (MessageFieldNameIterator iter = tempPrivs.GetFieldNameIterator(); iter.HasData(); iter++)
 		tempPrivs.CopyName(iter.GetFieldName(), server.GetCentralState());
 
 	// If the user asked for bandwidth limiting, create Policy objects to handle that.
@@ -78,8 +78,8 @@ App::App(void)
 	if (maxCombinedRate != MUSCLE_NO_LIMIT) {
 		inputPolicyRef.SetRef(newnothrow RateLimitSessionIOPolicy(maxCombinedRate));
 		outputPolicyRef = inputPolicyRef;
-		
-		if (inputPolicyRef()) 
+
+		if (inputPolicyRef())
 			LogTime(MUSCLE_LOG_INFO, "Limiting aggregate I/O bandwidth to %.02f kilobytes/second.\n", ((float)maxCombinedRate/1024.0f));
 		else
 		{
@@ -89,7 +89,7 @@ App::App(void)
 	} else {
 		if (maxReceiveRate != MUSCLE_NO_LIMIT) {
 			inputPolicyRef.SetRef(newnothrow RateLimitSessionIOPolicy(maxReceiveRate));
-			
+
 			if (inputPolicyRef())
 				LogTime(MUSCLE_LOG_INFO, "Limiting aggregate receive bandwidth to %.02f kilobytes/second.\n", ((float)maxReceiveRate/1024.0f));
 			else {
@@ -97,15 +97,15 @@ App::App(void)
 				okay = false;
 			}
 		}
-		
+
 		if (maxSendRate != MUSCLE_NO_LIMIT) {
 			outputPolicyRef.SetRef(newnothrow RateLimitSessionIOPolicy(maxSendRate));
-			
+
 			if (outputPolicyRef())
-				LogTime(MUSCLE_LOG_INFO, "Limiting aggregate send bandwidth to %.02f kilobytes/second.\n", ((float)maxSendRate/1024.0f)); 
+				LogTime(MUSCLE_LOG_INFO, "Limiting aggregate send bandwidth to %.02f kilobytes/second.\n", ((float)maxSendRate/1024.0f));
 			else {
 				WARN_OUT_OF_MEMORY;
-				okay = false; 
+				okay = false;
 			}
 		}
 	}
@@ -117,11 +117,11 @@ App::App(void)
 	filter.SetInputPolicy(inputPolicyRef);
 	filter.SetOutputPolicy(outputPolicyRef);
 
-	for (int b=bans.GetNumItems()-1; ((okay)&&(b>=0)); b--) 
-		if (filter.PutBanPattern(bans[b]()) != B_NO_ERROR) 
+	for (int b=bans.GetNumItems()-1; ((okay)&&(b>=0)); b--)
+		if (filter.PutBanPattern(bans[b]()) != B_NO_ERROR)
 			okay = false;
-	
-	for (int a=requires.GetNumItems()-1; ((okay)&&(a>=0)); a--) 
+
+	for (int a=requires.GetNumItems()-1; ((okay)&&(a>=0)); a--)
 		if (filter.PutRequirePattern(requires[a]()) != B_NO_ERROR)
 			okay = false;
 
@@ -132,7 +132,7 @@ App::App(void)
       FileDataIO fdio(muscleFopen(fprivateKeyFilePath->Cstr(), "rb"));
       ByteBufferRef fileData = GetByteBufferFromPool((uint32)fdio.GetLength());
       if ((fdio.GetFile())&&(fileData())&&(fdio.ReadFully(fileData()->GetBuffer(), fileData()->GetNumBytes()) == fileData()->GetNumBytes()))
-      { 
+      {
          LogTime(MUSCLE_LOG_INFO, "Using private key file [%s] to authenticate with connecting clients\n", fprivateKeyFilePath->Cstr());
          server.SetSSLPrivateKey(fileData);
       }
@@ -154,7 +154,7 @@ App::App(void)
 	// they all get the same set of ban/require patterns (since they all do the same thing anyway).
 	if (listenPorts.IsEmpty())
 		listenPorts.PutWithDefault(IPAddressAndPort(invalidIP, DEFAULT_MUSCLED_PORT));
-	
+
 	for (HashtableIterator<IPAddressAndPort, Void> iter(listenPorts); iter.HasData(); iter++) {
 		const IPAddressAndPort & iap = iter.GetKey();
 		if (server.PutAcceptFactory(iap.GetPort(), ReflectSessionFactoryRef(&filter, false), iap.GetIPAddress()) != B_NO_ERROR) {
@@ -162,7 +162,7 @@ App::App(void)
 				LogTime(MUSCLE_LOG_CRITICALERROR, "Error adding port %u, aborting.\n", iap.GetPort());
 			else
 				LogTime(MUSCLE_LOG_CRITICALERROR, "Error adding port %u to interface %s, aborting.\n", iap.GetPort(), Inet_NtoA(iap.GetIPAddress())());
-			
+
 			okay = false;
 			break;
 		}
@@ -170,10 +170,10 @@ App::App(void)
 
 	if (okay) {
 		retVal = (server.ServerProcessLoop() == B_NO_ERROR) ? 0 : 10;
-		
+
 		if (retVal > 0)
 			LogTime(MUSCLE_LOG_CRITICALERROR, "Server process aborted!\n");
-		else 
+		else
 			LogTime(MUSCLE_LOG_INFO, "Server process exiting.\n");
 	} else
 		LogTime(MUSCLE_LOG_CRITICALERROR, "Error occurred during setup, aborting!\n");
@@ -195,7 +195,7 @@ App::QuitRequested(void)
 	printf("QuitRequested\n");
 /*	if (fStatus == B_OK)
 		be_roster->StopWatching(be_app_messenger);*/
-	
+
 	return true;
 }
 
@@ -204,7 +204,7 @@ App::MessageReceived(BMessage *msg)
 {
 	printf("MessageReceived\n");
 	switch (msg->what) {
-		
+
 		default:
 			BApplication::MessageReceived(msg);
 	}
@@ -215,14 +215,14 @@ void
 App::ArgvReceived(int32 argc, char **argv)
 {
 	printf("ArgvReceived\n");
-	
-	Message args; 
+
+	Message args;
 	(void) ParseArgs(argc, argv, args);
 	HandleStandardDaemonArgs(args);
 
 	const char * value;
 	if (args.HasName("help")) {
-		Log(MUSCLE_LOG_INFO, "Usage:  muscled [port=%u] [listen=ip:port] [displaylevel=lvl] [filelevel=lvl] [logfile=filename]\n", DEFAULT_MUSCLED_PORT); 
+		Log(MUSCLE_LOG_INFO, "Usage:  muscled [port=%u] [listen=ip:port] [displaylevel=lvl] [filelevel=lvl] [logfile=filename]\n", DEFAULT_MUSCLED_PORT);
 #ifdef MUSCLE_ENABLE_MEMORY_TRACKING
 		Log(MUSCLE_LOG_INFO, "					 [maxmem=megs]\n");
 #endif
@@ -258,14 +258,14 @@ App::ArgvReceived(int32 argc, char **argv)
 	{
 		for (int32 i = 0; (args.FindString("port", i, &value) == B_NO_ERROR); i++) {
 			int16 port = atoi(value);
-			
+
 			if (port >= 0)
 				listenPorts.PutWithDefault(IPAddressAndPort(invalidIP, port));
 		}
 
 		for (int32 i = 0; (args.FindString("listen", i, &value) == B_NO_ERROR); i++) {
 			IPAddressAndPort iap(value, DEFAULT_MUSCLED_PORT, false);
-			
+
 			if (iap.GetPort() > 0)
 				listenPorts.PutWithDefault(iap);
 			else
@@ -279,7 +279,7 @@ App::ArgvReceived(int32 argc, char **argv)
 			const char * from = tok();
 			const char * to = tok();
 			ip_address fromIP = from ? Inet_AtoN(from) : 0;
-			
+
 			if ((fromIP != invalidIP)&&(to)) {
 				char ipbuf[64]; Inet_NtoA(fromIP, ipbuf);
 				LogTime(MUSCLE_LOG_INFO, "Will treat connections coming from [%s] as if they were from [%s].\n", ipbuf, to);
@@ -332,33 +332,33 @@ App::ArgvReceived(int32 argc, char **argv)
 		maxSessionsPerHost = atoi(value);
 		LogTime(MUSCLE_LOG_INFO, "Limiting session count for any given host to "UINT32_FORMAT_SPEC".\n", maxSessionsPerHost);
 	}
-	
+
 	if (args.FindString("privatekey", &value) == B_NO_ERROR) {
-		fprivateKeyFilePath = new String(value);	
+		fprivateKeyFilePath = new String(value);
 		//const String * fprivateKeyFilePath = args.GetStringPointer("privatekey");
 		//LogTime(MUSCLE_LOG_INFO, "Limiting session count for any given host to "UINT32_FORMAT_SPEC".\n", fprivateKeyFilePath);
 	}
 
 	{
 		for (int32 i = 0; (args.FindString("ban", i, &value) == B_NO_ERROR); i++) {
-			LogTime(MUSCLE_LOG_INFO, "Banning all clients whose IP addresses match [%s].\n", value);	
+			LogTime(MUSCLE_LOG_INFO, "Banning all clients whose IP addresses match [%s].\n", value);
 			bans.AddTail(value);
 		}
 	}
 
 	{
 		for (int32 i = 0; (args.FindString("require", i, &value) == B_NO_ERROR); i++) {
-			LogTime(MUSCLE_LOG_INFO, "Allowing only clients whose IP addresses match [%s].\n", value);	
+			LogTime(MUSCLE_LOG_INFO, "Allowing only clients whose IP addresses match [%s].\n", value);
 			requires.AddTail(value);
 		}
 	}
-	
+
 	{
 		const char * privNames[] = {"privkick", "privban", "privunban", "privall"};
 		for (int p = 0; p <= PR_NUM_PRIVILEGES; p++) {  // if (p == PR_NUM_PRIVILEGES), that means all privileges
 			for (int32 q=0; (args.FindString(privNames[p], q, &value) == B_NO_ERROR); q++) {
 				LogTime(MUSCLE_LOG_INFO, "Clients whose IP addresses match [%s] get %s privileges.\n", value, privNames[p]+4);
-				char tt[32]; 
+				char tt[32];
 				muscleSprintf(tt, "priv%i", p);
 				tempPrivs.AddString(tt, value);
 			}
@@ -378,5 +378,3 @@ main(void)
 	delete be_app;
 	return 0;
 }
-
-

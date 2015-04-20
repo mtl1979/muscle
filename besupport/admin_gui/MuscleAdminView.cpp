@@ -5,7 +5,7 @@
  * Authors:
  *		Axel Dörfler, axeld@pinc-software.de
  *		Clemens Zeidler, haiku@Clemens-Zeidler.de
- *		Alexander von Gluck, kallisti5@unixzen.com 
+ *		Alexander von Gluck, kallisti5@unixzen.com
  */
 
 
@@ -92,11 +92,11 @@ MuscleAdminView::_Init()
 	//STR_MUSCLE_DEAMON_NAME
 	fWebDir = new BTextControl(STR_TXT_DIRECTORY, STR_MUSCLE_DEAMON_NAME, NULL);
 //	SetWebDir(win->WebDir());
-	
+
 	// Run Service
 	fSelectWebDir = new BButton("Select Web Dir", STR_BTN_DIRECTORY,
-		new BMessage(MSG_PREF_SITE_BTN_SELECT));	
-	
+		new BMessage(MSG_PREF_SITE_BTN_SELECT));
+
 	BGroupLayout* webSiteLocationLayout = new BGroupLayout(B_VERTICAL, 0);
 	webSiteLocation->SetLayout(webSiteLocationLayout);
 
@@ -355,7 +355,7 @@ MuscleAdminView::FromMessage(const BMessage* archive)
 		fShowStatusIcon = value;
 	if (archive->FindBool("show time", &value) == B_OK)
 		fShowTime = value;
-	
+
 	//Incase we have a bad saving and none are showed..
 	if (!fShowLabel && !fShowStatusIcon)
 		fShowLabel = true;
@@ -459,7 +459,7 @@ MuscleAdminReplicant::MessageReceived(BMessage *message)
 				fShowLabel = !fShowLabel;
 			else
 				fShowLabel = true;
-				
+
 			Update(true);
 			break;
 
@@ -521,7 +521,7 @@ MuscleAdminReplicant::MouseDown(BPoint point)
 	menu->AddSeparatorItem();
 	menu->AddItem(new BMenuItem("About" B_UTF8_ELLIPSIS),
 		new BMessage(B_ABOUT_REQUESTED)));
-	menu->AddItem(new BMenuItem("Quit"), 
+	menu->AddItem(new BMenuItem("Quit"),
 		new BMessage(B_QUIT_REQUESTED)));
 	menu->SetTargetForItems(this);
 
@@ -662,4 +662,3 @@ instantiate_deskbar_item(void)
 {
 	return new MuscleAdminReplicant(BRect(0, 0, 15, 15), B_FOLLOW_NONE, true);
 }
-

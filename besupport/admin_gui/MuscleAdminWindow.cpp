@@ -49,7 +49,7 @@ MuscleAdminWindow::MessageReceived(BMessage* message)
 			PoorManServer* server;
 			win = ((PoorManApplication*)be_app)->GetPoorManWindow();
 			server = win->GetServer();
-	
+
 			PRINT(("Pref Window: sendDir CheckBox: %d\n",
 				fSiteView->SendDirValue()));
 			server->SetListDir(fSiteView->SendDirValue());
@@ -64,7 +64,7 @@ MuscleAdminWindow::MessageReceived(BMessage* message)
 				win->SetDirLabel(fSiteView->WebDir());
 			}
 
-			PRINT(("Pref Window: logConsole CheckBox: %d\n", 
+			PRINT(("Pref Window: logConsole CheckBox: %d\n",
 				fLoggingView->LogConsoleValue()));
 			win->SetLogConsoleFlag(fLoggingView->LogConsoleValue());
 			PRINT(("Pref Window: logFile CheckBox: %d\n",
@@ -73,13 +73,13 @@ MuscleAdminWindow::MessageReceived(BMessage* message)
 			PRINT(("Pref Window: logFileName: %s\n",
 				fLoggingView->LogFileName()));
 			win->SetLogPath(fLoggingView->LogFileName());
-	
-			PRINT(("Pref Window: MaxConnections Slider: %ld\n", 
+
+			PRINT(("Pref Window: MaxConnections Slider: %ld\n",
 				fAdvancedView->MaxSimultaneousConnections()));
 			server->SetMaxConns(fAdvancedView->MaxSimultaneousConnections());
 			win->SetMaxConnections(
 				(int16)fAdvancedView->MaxSimultaneousConnections());
-*/	
+*/
 //			if (Lock())
 				Quit();
 			break;
@@ -92,7 +92,7 @@ MuscleAdminWindow::MessageReceived(BMessage* message)
 			// find it
 			entry_ref appRef;
 			status_t err = be_roster->FindApp(STR_MUSCLE_DEAMON_NAME, &appRef);
-		
+
 			if(err != B_OK)
 				printf("Error %s\n", strerror(errno));
 			else
@@ -111,10 +111,10 @@ MuscleAdminWindow::MessageReceived(BMessage* message)
 			if(err != B_OK)
 				printf("Error %s\n", strerror(errno));
 			else
-				printf("OK %s\n", strerror(errno));				
+				printf("OK %s\n", strerror(errno));
 //	if(err < B_OK)
 //		return err;
-		
+
 //			printf("Run Server %s\n", STR_MUSCLE_DEAMON_NAME);
 //			status_t err = be_roster->Launch(STR_MUSCLE_DEAMON_NAME);
 			//printf("Has started\n");
@@ -122,7 +122,7 @@ MuscleAdminWindow::MessageReceived(BMessage* message)
 //				printf("Error %s\n", err);
 //			else
 //				printf("OK %s\n", err);
-			
+
 //			if (be_roster->IsRunning(STR_MUSCLE_DEAMON_NAME)) {
 //				printf("The server is running\n");
 //			} else

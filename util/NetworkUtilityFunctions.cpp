@@ -101,7 +101,7 @@ static inline void SET_SOCKADDR_IP(struct sockaddr_in6 & sockAddr, const ip_addr
 
    sockAddr.sin6_scope_id = tmp;
 }
-static inline uint16 GET_SOCKADDR_PORT(const struct sockaddr_in6 & addr) 
+static inline uint16 GET_SOCKADDR_PORT(const struct sockaddr_in6 & addr)
 {
    switch(addr.sin6_family)
    {
@@ -355,7 +355,7 @@ int32 SendDataUDP(const ConstSocketRef & sock, const void * buffer, uint32 size,
             if ((getpeername(fd, (struct sockaddr *)&toAddr, &length) != 0)||(GET_SOCKADDR_FAMILY(toAddr) != MUSCLE_SOCKET_FAMILY)) return -1;
          }
 
-         if (optToIP != invalidIP) 
+         if (optToIP != invalidIP)
          {
             SET_SOCKADDR_IP(toAddr, optToIP);
 #ifdef MUSCLE_USE_IFIDX_WORKAROUND
@@ -463,7 +463,7 @@ ConstSocketRef Connect(const ip_address & hostIP, uint16 port, const char * optD
             // The harder case:  the user doesn't want the Connect() call to take more than (so many) microseconds.
             // For this, we'll need to go into non-blocking mode and run a SocketMultiplexer loop to get the desired behaviour!
             const uint64 deadline = GetRunTime64()+maxConnectTime;
-            SocketMultiplexer multiplexer; 
+            SocketMultiplexer multiplexer;
             uint64 now;
             while((now = GetRunTime64()) < deadline)
             {
@@ -1344,7 +1344,7 @@ void Inet_NtoA(const ip_address & addr, char * ipbuf, bool preferIPv4)
 
 String Inet_NtoA(const ip_address & ipAddress, bool preferIPv4)
 {
-   char buf[64]; 
+   char buf[64];
    Inet_NtoA(ipAddress, buf, preferIPv4);
    return buf;
 }
@@ -1539,7 +1539,7 @@ status_t GetSocketKeepAliveBehavior(const ConstSocketRef & sock, uint32 * retMax
       {
          valLen = sizeof(val); if (getsockopt(fd, SOL_TCP, TCP_KEEPCNT, (sockopt_arg *) &val, &valLen) != 0) return B_ERROR;
          *retMaxProbeCount = val;
-      } 
+      }
    }
 
    if (retIdleTime)

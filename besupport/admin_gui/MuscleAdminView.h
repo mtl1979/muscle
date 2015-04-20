@@ -51,11 +51,11 @@ protected:
 			bool			fInDeskbar;
 
 			BSize			fPreferredSize;
-			
+
 			BButton*		fCancelButton;
 			BButton*		fDoneButton;
 			BButton*		fSelectWebDir;
-			
+
 			BTextControl*	fWebDir;
 };
 

@@ -1,4 +1,4 @@
-/* This file is Copyright 2000-2013 Meyer Sound Laboratories Inc.  See the included LICENSE.txt file for details. */  
+/* This file is Copyright 2000-2013 Meyer Sound Laboratories Inc.  See the included LICENSE.txt file for details. */
 
 #ifndef DebugTimer_h
 #define DebugTimer_h
@@ -44,9 +44,9 @@ public:
    uint64 GetElapsedTime() const {return GetElapsedTime(GetMode());}
 
    /** Returns the amount of elapsed time, in microseconds, that has been spent in the given mode.
-    *  Note that if (whichMode) is the currently active mode, the returned value will be growing from moment to moment. 
+    *  Note that if (whichMode) is the currently active mode, the returned value will be growing from moment to moment.
     */
-   uint64 GetElapsedTime(uint32 whichMode) const 
+   uint64 GetElapsedTime(uint32 whichMode) const
    {
       const uint64 * et = _modeToElapsedTime.Get(whichMode);
       return (et ? *et : 0) + ((whichMode == _currentMode) ? (MUSCLE_DEBUG_TIMER_CLOCK-_startTime) : 0);

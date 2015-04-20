@@ -254,7 +254,7 @@ status_t GetNumberOfProcessors(uint32 & retNumProcessors)
    if (get_system_info(&info) == B_NO_ERROR)
    {
       retNumProcessors = info.cpu_count;
-      return B_NO_ERROR;  
+      return B_NO_ERROR;
    }
 #elif defined(__APPLE__)
    host_basic_info_data_t hostInfo;
@@ -271,7 +271,7 @@ status_t GetNumberOfProcessors(uint32 & retNumProcessors)
    return B_NO_ERROR;
 #elif defined(__linux__)
    FILE * f = muscleFopen("/proc/cpuinfo", "r");
-   if (f) 
+   if (f)
    {
       retNumProcessors = 0;
       char line[256];
