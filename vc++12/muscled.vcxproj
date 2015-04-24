@@ -100,7 +100,7 @@
       <PrecompiledHeaderOutputFile>.\Junk/muscled.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Junk/</AssemblerListingLocation>
       <ObjectFileName>.\Junk/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Junk/</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>.\Junk\muscled.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
@@ -142,7 +142,7 @@
       <PrecompiledHeaderOutputFile>.\Junk/muscled.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Junk/</AssemblerListingLocation>
       <ObjectFileName>.\Junk/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Junk/muscled</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>.\Junk\muscled.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
@@ -183,7 +183,7 @@
       <PrecompiledHeaderOutputFile>.\Junk/muscled.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Junk/</AssemblerListingLocation>
       <ObjectFileName>.\Junk/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Junk/</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>.\Junk\muscled.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
@@ -227,7 +227,7 @@
       <PrecompiledHeaderOutputFile>.\Junk/muscled.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Junk/</AssemblerListingLocation>
       <ObjectFileName>.\Junk/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Junk/muscled</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>.\Junk\muscled.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
