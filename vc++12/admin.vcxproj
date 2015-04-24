@@ -99,7 +99,7 @@
       <PrecompiledHeaderOutputFile>.\Junk/admin.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Junk/</AssemblerListingLocation>
       <ObjectFileName>.\Junk/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Junk/</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>.\Junk\admin.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
@@ -141,7 +141,7 @@
       <PrecompiledHeaderOutputFile>.\Junk/admin.pch</PrecompiledHeaderOutputFile>
       <AssemblerListingLocation>.\Junk/</AssemblerListingLocation>
       <ObjectFileName>.\Junk/</ObjectFileName>
-      <ProgramDataBaseFileName>.\Junk/admin</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>.\Junk\admin.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level3</WarningLevel>
       <SuppressStartupBanner>true</SuppressStartupBanner>
     </ClCompile>
