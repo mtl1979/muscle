@@ -43,7 +43,7 @@ typedef void sockopt_arg;  // Whereas sane operating systems use void pointers
 
 #include <sys/stat.h>
 
-#if defined(__FreeBSD__) || defined(BSD) || defined(__APPLE__) || defined(__linux__)
+#if defined(__FreeBSD__) || defined(BSD) || defined(__APPLE__) || defined(__linux__) || defined(__CYGWIN__)
 # if defined(ANDROID) // JFM
 #  define USE_SOCKETPAIR 1
 # else
