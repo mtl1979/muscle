@@ -204,7 +204,7 @@ protected:
      DWORD lineNumber;
      TCHAR lineFileName[STACKWALK_MAX_NAMELEN];
      DWORD symType;
-     LPTSTR symTypeString;
+     LPCTSTR symTypeString;
      TCHAR moduleName[STACKWALK_MAX_NAMELEN];
      DWORD64 baseOfImage;
      TCHAR loadedImageName[STACKWALK_MAX_NAMELEN];
@@ -215,7 +215,7 @@ protected:
    void OnSymInit(LPTSTR szSearchPath, DWORD symOptions, LPTSTR szUserName);
    void OnLoadModule(LPTSTR img, LPTSTR mod, DWORD64 baseAddr, DWORD size, DWORD result, LPCTSTR symType, LPTSTR pdbName, ULONGLONG fileVersion);
    void OnCallstackEntry(CallstackEntryType eType, CallstackEntry *entry);
-   void OnDbgHelpErr(LPTSTR szFuncName, DWORD gle, DWORD64 addr);
+   void OnDbgHelpErr(LPCTSTR szFuncName, DWORD gle, DWORD64 addr);
    void OnOutput(LPTSTR szText)
    {
       if (this->m_outFile) _fputts(_T("  "), m_outFile);
@@ -314,27 +314,30 @@ public:
   {
     if (m_parent == NULL)
       return FALSE;
+
     // Dynamically load the Entry-Points for dbghelp.dll:
     // First try to load the newest one from
-    TCHAR szTemp[4096];
-    // But before we do this, we first check if the ".local" file exists
-    if (GetModuleFileName(NULL, szTemp, 4096) > 0)
     {
-      _tcscat_s(szTemp, _T(".local"));
-      if (GetFileAttributes(szTemp) == INVALID_FILE_ATTRIBUTES)
+      TCHAR szTemp[4096];
+      // But before we do this, we first check if the ".local" file exists
+      if (GetModuleFileName(NULL, szTemp, 4096) > 0)
       {
-        // ".local" file does not exist, so we can try to load the dbghelp.dll from the "Debugging Tools for Windows"
-        LPCTSTR suffixes[] = {
-          _T("\\Debugging Tools for Windows\\dbghelp.dll"),
-          _T("\\Debugging Tools for Windows 64-Bit\\dbghelp.dll"),
-          _T("\\Debugging Tools for Windows (x64)\\dbghelp.dll")
-        };
-        for (uint32 i = 0; ((i < ARRAYITEMS(suffixes)) && (m_hDbhHelp == NULL)); i++)
+        _tcscat_s(szTemp, _T(".local"));
+        if (GetFileAttributes(szTemp) == INVALID_FILE_ATTRIBUTES)
         {
-          if (GetEnvironmentVariable(_T("ProgramFiles"), szTemp, 4096) > 0)
+          // ".local" file does not exist, so we can try to load the dbghelp.dll from the "Debugging Tools for Windows"
+          LPCTSTR suffixes[] = {
+            _T("\\Debugging Tools for Windows\\dbghelp.dll"),
+            _T("\\Debugging Tools for Windows 64-Bit\\dbghelp.dll"),
+            _T("\\Debugging Tools for Windows (x64)\\dbghelp.dll")
+          };
+          for (uint32 i = 0; ((i < ARRAYITEMS(suffixes)) && (m_hDbhHelp == NULL)); i++)
           {
-            _tcscat_s(szTemp, suffixes[i]);
-            if (GetFileAttributes(szTemp) != INVALID_FILE_ATTRIBUTES) m_hDbhHelp = LoadLibrary(szTemp);
+            if (GetEnvironmentVariable(_T("ProgramFiles"), szTemp, 4096) > 0)
+            {
+              _tcscat_s(szTemp, suffixes[i]);
+              if (GetFileAttributes(szTemp) != INVALID_FILE_ATTRIBUTES) m_hDbhHelp = LoadLibrary(szTemp);
+            }
           }
         }
       }
@@ -979,7 +982,8 @@ BOOL StackWalker::LoadModules()
 }
 
 static __declspec(align(16)) CONTEXT _context;
-static int SaveContextFilterFunc(struct _EXCEPTION_POINTERS *ep) {
+static int SaveContextFilterFunc(struct _EXCEPTION_POINTERS *ep)
+{
   memcpy_s(&_context, sizeof(CONTEXT), ep->ContextRecord, sizeof(CONTEXT));
   return EXCEPTION_EXECUTE_HANDLER;
 }
@@ -1015,18 +1019,18 @@ BOOL StackWalker::ShowCallstack(uint32 maxDepth, HANDLE hThread, const CONTEXT *
   s_readMemoryFunction = readMemoryFunction;
   s_readMemoryFunction_UserData = pUserData;
 
-  if (context) _context = *context;
+       if (context) _context = *context;
   else if (hThread == GetCurrentThread()) // If no context is provided, capture the context
   {
     __try
     {
-      memset(&_context, 0, sizeof(CONTEXT));
-      _context.ContextFlags = USED_CONTEXT_FLAGS;
-      RtlCaptureContext(&_context);
+       memset(&_context, 0, sizeof(CONTEXT));
+       _context.ContextFlags = USED_CONTEXT_FLAGS;
+       RtlCaptureContext(&_context);
     }
-    __except (SaveContextFilterFunc(GetExceptionInformation()))
+    __except(SaveContextFilterFunc(GetExceptionInformation()))
     {
-      // Do nothing; the SaveContextFilterFunc() call has written to _context already (above)
+       // Do nothing; the SaveContextFilterFunc() call has written to _context already (above)
     }
   }
   else
@@ -1300,16 +1304,16 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry *ent
       if (entry->moduleName[0] == 0)
       {
         if (entry->loadedImageName[0] != 0)
-          _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%s: %s+0x%x\n"), (LPVOID)entry->loadedImageName, entry->name, (int64)entry->offsetFromSymbol);
-        else
-          _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%p: %s+0x%x\n"), (LPVOID)entry->offset, entry->name, (int64)entry->offsetFromSymbol);
+           _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%s: %s+0x%x\n"), (LPVOID)entry->loadedImageName, entry->name, (int64) entry->offsetFromSymbol);
+         else
+           _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%p: %s+0x%x\n"), (LPVOID)entry->offset, entry->name, (int64) entry->offsetFromSymbol);
       }
       else
       {
         if (entry->loadedImageName[0] != 0)
-          _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%s (%s): %s+0x%x\n"), (LPVOID)entry->loadedImageName, entry->moduleName, entry->name, (int64)entry->offsetFromSymbol);
-        else
-          _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%p (%s): %s+0x%x\n"), (LPVOID)entry->offset, entry->moduleName, entry->name, (int64)entry->offsetFromSymbol);
+           _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%s (%s): %s+0x%x\n"), (LPVOID)entry->loadedImageName, entry->moduleName, entry->name, (int64) entry->offsetFromSymbol);
+         else
+           _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%p (%s): %s+0x%x\n"), (LPVOID)entry->offset, entry->moduleName, entry->name, (int64) entry->offsetFromSymbol);
       }
     }
     else _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%s (%d): %s\n"), entry->lineFileName, entry->lineNumber, entry->name);
@@ -1318,7 +1322,7 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry *ent
   }
 }
 
-void StackWalker::OnDbgHelpErr(LPTSTR szFuncName, DWORD gle, DWORD64 addr)
+void StackWalker::OnDbgHelpErr(LPCTSTR szFuncName, DWORD gle, DWORD64 addr)
 {
   TCHAR buffer[STACKWALK_MAX_NAMELEN];
   _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("ERROR: %s, GetLastError: %d (Address: %p)\n"), szFuncName, gle, (LPVOID)addr);
