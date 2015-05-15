@@ -19,10 +19,12 @@
 #endif
 
 #ifdef WIN32
-# pragma comment(lib, "ws2_32.lib")
-# pragma comment(lib, "winmm.lib")
-# pragma comment(lib, "iphlpapi.lib")
-# pragma comment(lib, "version.lib")
+# if !(defined(__MINGW32__) || defined(__MINGW64__))
+#  pragma comment(lib, "ws2_32.lib")
+#  pragma comment(lib, "winmm.lib")
+#  pragma comment(lib, "iphlpapi.lib")
+#  pragma comment(lib, "version.lib")
+# endif
 # include <signal.h>
 # include <mmsystem.h>
 #else
@@ -1053,7 +1055,7 @@ ConstSocketRef GetConstSocketRefFromPool(int fd, bool okayToClose, bool returnNU
          // to inherit the socket will have to either avoid calling this 
          // for those sockets, or call SetHandleInformation() again 
          // afterwards to reinstate the inherit-handle flag)
-         (void) SetHandleInformation((HANDLE)fd, HANDLE_FLAG_INHERIT, 0);
+         (void) SetHandleInformation((HANDLE)((intptr)fd), HANDLE_FLAG_INHERIT, 0);
 #endif
       }
       else if (okayToClose) CloseSocket(fd);

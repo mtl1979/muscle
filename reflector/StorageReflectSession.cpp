@@ -490,7 +490,7 @@ MessageReceivedFromGateway(const MessageRef & msgRef, void * userData)
                   NodePathMatcher matcher;
                   matcher.PutPathsFromMessage(PR_NAME_KEYS, PR_NAME_FILTERS, msg, DEFAULT_PATH_PREFIX);
 
-                  void * args[] = {reply(), (void *)((long)maxDepth)};
+                  void * args[] = {reply(), (void *)((intptr)maxDepth)};
                   (void) matcher.DoTraversal((PathMatchCallback)GetSubtreesCallbackFunc, this, GetGlobalRoot(), true, args);
                }
                MessageReceivedFromSession(*this, reply, NULL);  // send the result back to our client
@@ -1162,7 +1162,7 @@ GetSubtreesCallback(DataNode & node, void * ud)
 
    void ** args    = (void **)ud;
    Message * reply = static_cast<Message *>(args[0]);
-   int32 maxDepth  = (int32) ((long)args[1]);
+   int32 maxDepth  = (int32) ((intptr)args[1]);
 
    bool inMyOwnSubtree = false;  // default:  actual value will only be calculated if it makes a difference
    bool reflectToSelf = GetReflectToSelf();
@@ -1202,7 +1202,7 @@ int
 StorageReflectSession ::
 DoSubscribeRefCallback(DataNode & node, void * userData)
 {
-   node.IncrementSubscriptionRefCount(GetSessionIDString(), (long) userData);
+   node.IncrementSubscriptionRefCount(GetSessionIDString(), (intptr) userData);
    return node.GetDepth();  // continue traversal as usual
 }
 
