@@ -105,6 +105,31 @@ ifeq ($(OSTYPE), SunOS)
     LIBS = -lsocket -lnsl
 endif
 
+ifneq (,$(findstring MINGW32,$(OSTYPE)))
+    OSTYPE=MINGW
+endif
+
+ifneq (,$(findstring MINGW64,$(OSTYPE)))
+    OSTYPE=MINGW
+endif
+
+ifeq ($(OSTYPE),MINGW)
+    CC = gcc
+    ARCH = $(shell gcc -dumpmachine | sed 's/-.*//g')
+    ifeq ($(ARCH),x86_64)
+        CXXFLAGS += -m64 -D__MINGW64__ -I/mingw64/x86_64-w64-mingw32/include
+        LFLAGS = -L/mingw64/x86_64-w64-mingw32/lib -L/lib
+        LIBS = -lregex -lws2_32 -lwinmm -liphlpapi -lmingwex -lmsvcrt
+    else
+        OBJFILES += regcomp.o regerror.o regexec.o regfree.o
+        VPATH += ../regex/regex
+        CXXFLAGS += -m32 -D__MINGW32__ -DMUSCLE_AVOID_IPV6 -D_WIN32_WINNT=0x0501 -I/mingw32/i686-w64-mingw32/include
+        CFLAGS += -I../regex/regex
+        LFLAGS = -L/mingw32/i686-w64-mingw32/lib -L/lib
+        LIBS = -lws2_32 -lwinmm -liphlpapi -lmingwex -lmsvcrt
+    endif
+endif
+
 ifeq ($(strip $(MEMORY_TRACKING_SUPPORTED)),yes)
    CXXFLAGS += -DMUSCLE_ENABLE_MEMORY_TRACKING
 endif
@@ -119,13 +144,13 @@ all : $(EXECUTABLES)
 debug : CCOPTFLAGS = -g
 debug : all
 
-muscled : $(OBJFILES) $(ZLIBOBJS)
-	$(CXX) $(LIBS) $(LFLAGS) -o $@ $^
+muscled : muscled.o libmuscle.a
+	$(CXX) $(LFLAGS) -o $@ $^ libmuscle.a $(LIBS)
 
-admin : Message.o AbstractMessageIOGateway.o MessageIOGateway.o String.o NetworkUtilityFunctions.o SysLog.o admin.o PulseNode.o SetupSystem.o ZLibCodec.o ByteBuffer.o GlobalMemoryAllocator.o MiscUtilityFunctions.o Directory.o FilePathInfo.o StringMatcher.o SocketMultiplexer.o $(ZLIBOBJS)
-	$(CXX) $(LIBS) $(LFLAGS) -o $@ $^
+admin : admin.o libmuscle.a
+	$(CXX) $(LFLAGS) -o $@ $^ libmuscle.a $(LIBS)
 
-libmuscle.a : $(OBJFILES)
+libmuscle.a : $(OBJFILES) $(ZLIBOBJS)
 	$(AR) rcs $@ $^
 
 clean :

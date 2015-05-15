@@ -1305,14 +1305,14 @@ void StackWalker::OnCallstackEntry(CallstackEntryType eType, CallstackEntry *ent
       {
         if (entry->loadedImageName[0] != 0)
            _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%s: %s+0x%x\n"), (LPVOID)entry->loadedImageName, entry->name, (int64) entry->offsetFromSymbol);
-         else
+        else
            _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%p: %s+0x%x\n"), (LPVOID)entry->offset, entry->name, (int64) entry->offsetFromSymbol);
       }
       else
       {
         if (entry->loadedImageName[0] != 0)
            _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%s (%s): %s+0x%x\n"), (LPVOID)entry->loadedImageName, entry->moduleName, entry->name, (int64) entry->offsetFromSymbol);
-         else
+        else
            _sntprintf_s(buffer, STACKWALK_MAX_NAMELEN, _T("%p (%s): %s+0x%x\n"), (LPVOID)entry->offset, entry->moduleName, entry->name, (int64) entry->offsetFromSymbol);
       }
     }
@@ -2204,6 +2204,8 @@ static bool MUSCLE_TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION tzi, 
 # if defined(__BORLANDC__) || defined(MUSCLE_USING_OLD_MICROSOFT_COMPILER) || defined(__MINGW32__)
 #  if defined(_MSC_VER)
    typedef BOOL (*TzSpecificLocalTimeToSystemTimeProc) (IN LPTIME_ZONE_INFORMATION lpTimeZoneInformation, IN LPSYSTEMTIME lpLocalTime, OUT LPSYSTEMTIME lpUniversalTime);
+#  elif defined(__MINGW32__) || defined(__MINGW64__)
+   typedef BOOL WINAPI (*TzSpecificLocalTimeToSystemTimeProc) (IN LPTIME_ZONE_INFORMATION lpTimeZoneInformation, IN LPSYSTEMTIME lpLocalTime, OUT LPSYSTEMTIME lpUniversalTime);
 #  else
    typedef WINBASEAPI BOOL WINAPI (*TzSpecificLocalTimeToSystemTimeProc) (IN LPTIME_ZONE_INFORMATION lpTimeZoneInformation, IN LPSYSTEMTIME lpLocalTime, OUT LPSYSTEMTIME lpUniversalTime);
 #  endif
