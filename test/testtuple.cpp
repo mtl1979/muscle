@@ -136,7 +136,7 @@ static void PrintFiveTuple(const FiveTuple & ft)
    printf("]");
 }
 
-// This program exercises the MyTuple
+// This program exercises the Tuple class
 int main()
 {
    printf("Tuple shift test\n");
