@@ -210,7 +210,7 @@ protected:
      TCHAR loadedImageName[STACKWALK_MAX_NAMELEN];
    } CallstackEntry;
 
-   typedef enum CallstackEntryType {firstEntry, nextEntry, lastEntry};
+   enum CallstackEntryType {firstEntry, nextEntry, lastEntry};
 
    void OnSymInit(LPTSTR szSearchPath, DWORD symOptions, LPTSTR szUserName);
    void OnLoadModule(LPTSTR img, LPTSTR mod, DWORD64 baseAddr, DWORD size, DWORD result, LPCTSTR symType, LPTSTR pdbName, ULONGLONG fileVersion);

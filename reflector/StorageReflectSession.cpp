@@ -1202,7 +1202,7 @@ int
 StorageReflectSession ::
 DoSubscribeRefCallback(DataNode & node, void * userData)
 {
-   node.IncrementSubscriptionRefCount(GetSessionIDString(), (intptr) userData);
+   node.IncrementSubscriptionRefCount(GetSessionIDString(), (long)((intptr) userData));
    return node.GetDepth();  // continue traversal as usual
 }
 
