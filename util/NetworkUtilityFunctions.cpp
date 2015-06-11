@@ -1257,7 +1257,7 @@ status_t GetNetworkInterfaceInfos(Queue<NetworkInterfaceInfo> & results, uint32 
                   {
                      ip_address broadcastIP, netmask;
                      uint32 numLocalAddrs = (bytesReturned/sizeof(INTERFACE_INFO));
-                     for (unsigned int i=0; i<numLocalAddrs; i++)
+                     for (uint32 i=0; i<numLocalAddrs; i++)
                      {
                         ip_address nextIP = SockAddrToIPAddr((const sockaddr *) &localAddrs[i].iiAddress);
                         if (nextIP == unicastIP)

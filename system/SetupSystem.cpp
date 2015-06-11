@@ -335,7 +335,7 @@ public:
    {
       if ((_tailBlock == NULL)||(_tailBlock->IsFull()))
       {
-         MutexEventBlock * newBlock = (MutexEventBlock *) malloc(sizeof(MutexEventBlock));  // THIS LINE CAN ONLY CALL plain old malloc() and nothing else!!!
+         MutexEventBlock * newBlock = static_cast<MutexEventBlock *>(malloc(sizeof(MutexEventBlock)));  // THIS LINE CAN ONLY CALL plain old malloc() and nothing else!!!
          if (newBlock)
          {
             newBlock->Initialize();
@@ -421,7 +421,7 @@ void DeadlockFinder_LogEvent(bool isLock, const void * mutexPtr, const char * fi
    MutexEventLog * mel = _mutexEventLogs.GetThreadLocalObject();
    if (mel == NULL)
    {
-      mel = (MutexEventLog *) malloc(sizeof(MutexEventLog));  // MUST CALL malloc() here to avoid inappropriate re-entrancy!
+      mel = static_cast<MutexEventLog *>(malloc(sizeof(MutexEventLog))); // MUST CALL malloc() here to avoid inappropriate re-entrancy!
       if (mel)
       {
          mel->Initialize(muscle_thread_id::GetCurrentThreadID());

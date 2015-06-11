@@ -35,7 +35,7 @@ class MyTupleSubclass : public Tuple<5, float>
 public:
    MyTupleSubclass() {/* empty */}
 
-   MyTupleSubclass(float first)
+   explicit MyTupleSubclass(float first)
    {
       for (uint32 i=0; i<GetNumItemsInTuple(); i++) (*this)[i] = first + 50.0f - (float)i;
       _count = counter++;
