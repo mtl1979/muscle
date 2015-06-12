@@ -7,8 +7,8 @@
 #include "util/MiscUtilityFunctions.h"
 #include "util/StringTokenizer.h"
 #include "zlib/ZipFileUtilityFunctions.h"
-#include "zlib/zlib/contrib/minizip/zip.h"
-#include "zlib/zlib/contrib/minizip/unzip.h"
+#include "contrib/minizip/zip.h"
+#include "contrib/minizip/unzip.h"
 
 namespace muscle {
 

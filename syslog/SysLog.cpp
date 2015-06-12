@@ -23,7 +23,7 @@
 #endif
 
 #if !defined(MUSCLE_INLINE_LOGGING) && defined(MUSCLE_ENABLE_ZLIB_ENCODING)
-# include "zlib/zlib/zlib.h"
+# include "zlib.h"
 #endif
 
 #if defined(__APPLE__)
