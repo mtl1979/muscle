@@ -982,7 +982,7 @@ BOOL StackWalker::LoadModules()
 }
 
 static __declspec(align(16)) CONTEXT _context;
-static int SaveContextFilterFunc(struct _EXCEPTION_POINTERS *ep) 
+static int SaveContextFilterFunc(struct _EXCEPTION_POINTERS *ep)
 {
   memcpy_s(&_context, sizeof(CONTEXT), ep->ContextRecord, sizeof(CONTEXT));
   return EXCEPTION_EXECUTE_HANDLER;
@@ -1075,6 +1075,14 @@ BOOL StackWalker::ShowCallstack(uint32 maxDepth, HANDLE hThread, const CONTEXT *
   s.AddrBStore.Offset = _context.RsBSP;
   s.AddrBStore.Mode = AddrModeFlat;
   s.AddrStack.Offset = _context.IntSp;
+  s.AddrStack.Mode = AddrModeFlat;
+#elif _M_ARM
+  imageType = IMAGE_FILE_MACHINE_ARM;
+  s.AddrPC.Offset = _context.Pc;
+  s.AddrPC.Mode = AddrModeFlat;
+  s.AddrFrame.Offset = _context.R11;
+  s.AddrFrame.Mode = AddrModeFlat;
+  s.AddrStack.Offset = _context.Sp;
   s.AddrStack.Mode = AddrModeFlat;
 #else
 # error "StackWalker:  Platform not supported!"
@@ -1464,7 +1472,7 @@ void UpdateAllocationStackTrace(bool isAllocation, String * & s)
 {
    if (isAllocation)
    {
-      if (s == NULL) 
+      if (s == NULL)
       {
          s = newnothrow String;
          if (s == NULL) WARN_OUT_OF_MEMORY;
