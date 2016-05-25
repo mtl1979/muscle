@@ -37,10 +37,10 @@ static void CheckFile(const String & path, Queue<String> & codes)
             if (ltIdx >= 0)
             {
                int32 commentIdx = line->IndexOf("//");   // don't include LogTime() calls that are commented out
-               if ((commentIdx < 0)||(commentIdx > ltIdx)) 
+               if ((commentIdx < 0)||(commentIdx > ltIdx))
                {
-                  char buf[128]; 
-                  muscleSprintf(buf, "[%s] %s:" UINT32_FORMAT_SPEC": ", SourceCodeLocationKeyToString(GenerateSourceCodeLocationKey(fileName(), lineNumber))(), path(), lineNumber);
+                  char buf[128];
+                  muscleSprintf(buf, "[%s] %s:" UINT32_FORMAT_SPEC ": ", SourceCodeLocationKeyToString(GenerateSourceCodeLocationKey(fileName(), lineNumber))(), path(), lineNumber);
                   codes.AddTail(line->Prepend(buf));
                }
             }
