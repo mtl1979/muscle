@@ -145,7 +145,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -187,7 +187,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -232,7 +232,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -275,7 +275,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -293,7 +293,7 @@
       <ProgramDatabaseFile>$(IntDir)</ProgramDatabaseFile>
     </Link>
     <Bscmake>
-      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -311,7 +311,7 @@
       <ProgramDatabaseFile>$(IntDir)</ProgramDatabaseFile>
     </Link>
     <Bscmake>
-      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
