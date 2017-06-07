@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Copyright (c) 2005-2006, Haiku, Inc.
  * Distributed under the terms of the MIT license.
  *
@@ -278,7 +278,7 @@ App::ArgvReceived(int32 argc, char **argv)
 			StringTokenizer tok(value, ",=");
 			const char * from = tok();
 			const char * to = tok();
-			ip_address fromIP = from ? Inet_AtoN(from) : 0;
+			IPAddress fromIP = from ? Inet_AtoN(from) : invalidIP;
 
 			if ((fromIP != invalidIP)&&(to)) {
 				char ipbuf[64]; Inet_NtoA(fromIP, ipbuf);
