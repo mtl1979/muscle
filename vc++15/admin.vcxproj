@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|ARM">
@@ -115,7 +115,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\zlib\zlib\win32;.\;..\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;MUSCLE_ENABLE_ZLIB_ENCODING;MUSCLE_USE_CPLUSPLUS11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;MUSCLE_ENABLE_ZLIB_ENCODING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -145,7 +145,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -158,7 +158,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\zlib\zlib\win32;.\;..\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;MUSCLE_ENABLE_ZLIB_ENCODING;MUSCLE_USE_CPLUSPLUS11;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;MUSCLE_ENABLE_ZLIB_ENCODING;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -187,7 +187,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -200,7 +200,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\zlib\zlib\win32;.\;..\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;DEBUG;_CONSOLE;MUSCLE_ENABLE_ZLIB_ENCODING;MUSCLE_USE_CPLUSPLUS11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;DEBUG;_CONSOLE;MUSCLE_ENABLE_ZLIB_ENCODING;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -232,7 +232,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -245,7 +245,7 @@
       <Optimization>MaxSpeed</Optimization>
       <InlineFunctionExpansion>OnlyExplicitInline</InlineFunctionExpansion>
       <AdditionalIncludeDirectories>..\zlib\zlib\win32;.\;..\;..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>WIN32;DEBUG;_CONSOLE;MUSCLE_ENABLE_ZLIB_ENCODING;MUSCLE_USE_CPLUSPLUS11;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;DEBUG;_CONSOLE;MUSCLE_ENABLE_ZLIB_ENCODING;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
@@ -275,7 +275,7 @@
     </Link>
     <Bscmake>
       <SuppressStartupBanner>true</SuppressStartupBanner>
-      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|ARM'">
@@ -293,7 +293,7 @@
       <ProgramDatabaseFile>$(IntDir)</ProgramDatabaseFile>
     </Link>
     <Bscmake>
-      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|ARM'">
@@ -311,7 +311,7 @@
       <ProgramDatabaseFile>$(IntDir)</ProgramDatabaseFile>
     </Link>
     <Bscmake>
-      <OutputFile>$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
+      <OutputFile>.\$(Platform)\$(Configuration)\Build\admin.bsc</OutputFile>
     </Bscmake>
   </ItemDefinitionGroup>
   <ItemGroup>
