@@ -77,7 +77,7 @@ static void WriteOctalASCII(uint8 * b, uint64 val, uint8 fieldSize)
    int numChars = muscleMin((int)fieldSize, ((int)(strlen(tmp)+1)));  // include the NUL byte if possible
    uint8 * dStart = (b+fieldSize)-numChars;
    memcpy(dStart, tmp, numChars);
-   memset(b, '0', dStart-b);  // initial zeros
+   if (dStart > b) memset(b, '0', dStart-b);  // initial zeros
 }
 
 status_t TarFileWriter :: FinishCurrentFileDataBlock()
