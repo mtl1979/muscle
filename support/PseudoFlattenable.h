@@ -39,9 +39,7 @@ public:
     */
    status_t CopyFrom(const Flattenable & copyFrom)
    {
-#ifndef WIN32  // avoids error C2027: use of undefined type 'muscle::Flattenable'
       (void) copyFrom;
-#endif
       return B_ERROR;
    }
 };
