@@ -23,10 +23,10 @@
 
 #ifdef WIN32
 # if !(defined(__MINGW32__) || defined(__MINGW64__))
-#  pragma comment(lib, "ws2_32.lib")
-#  pragma comment(lib, "winmm.lib")
-#  pragma comment(lib, "iphlpapi.lib")
-#  pragma comment(lib, "version.lib")
+# pragma comment(lib, "ws2_32.lib")
+# pragma comment(lib, "winmm.lib")
+# pragma comment(lib, "iphlpapi.lib")
+# pragma comment(lib, "version.lib")
 # endif
 # include <signal.h>
 # include <mmsystem.h>
@@ -547,7 +547,7 @@ void DeadlockFinder_LogEvent(bool isLock, const void * mutexPtr, const char * fi
    MutexEventLog * mel = _mutexEventLogs.GetThreadLocalObject();
    if (mel == NULL)
    {
-      mel = static_cast<MutexEventLog *>(malloc(sizeof(MutexEventLog))); // MUST CALL malloc() here to avoid inappropriate re-entrancy!
+      mel = static_cast<MutexEventLog *>(malloc(sizeof(MutexEventLog)));  // MUST CALL malloc() here to avoid inappropriate re-entrancy!
       if (mel)
       {
          mel->Initialize(muscle_thread_id::GetCurrentThreadID());
@@ -1161,7 +1161,7 @@ ConstSocketRef GetConstSocketRefFromPool(int fd, bool okayToClose, bool returnNU
          // to inherit the socket will have to either avoid calling this
          // for those sockets, or call SetHandleInformation() again
          // afterwards to reinstate the inherit-handle flag)
-         (void) SetHandleInformation((HANDLE)((intptr)fd), HANDLE_FLAG_INHERIT, 0);
+         (void) SetHandleInformation((HANDLE)((ptrdiff)fd), HANDLE_FLAG_INHERIT, 0);
 #endif
       }
       else if (okayToClose) CloseSocket(fd);
@@ -2002,11 +2002,11 @@ Queue<String> GetBuildFlags()
 #endif
 
 #ifdef MUSCLE_AVOID_MULTICAST_API
-   q.AddTail("MUSCLE_ENABLE_KEEPALIVE_API");
+   q.AddTail("MUSCLE_AVOID_MULTICAST_API");
 #endif
 
-#ifdef MUSCLE_ENABLE_KEEPALIVE_API
-   q.AddTail("MUSCLE_ENABLE_KEEPALIVE_API");
+#ifdef MUSCLE_DISABLE_KEEPALIVE_API
+   q.AddTail("MUSCLE_DISABLE_KEEPALIVE_API");
 #endif
 
 #ifdef MUSCLE_64_BIT_PLATFORM

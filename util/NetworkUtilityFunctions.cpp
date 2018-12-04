@@ -23,10 +23,10 @@
 # include <mswsock.h>  // for SIO_UDP_CONNRESET, etc
 # include <ws2tcpip.h>
 # if !(defined(__MINGW32__) || defined(__MINGW64__))
-#  ifndef MUSCLE_AVOID_MULTICAST_API
-#   include <ws2ipdef.h>  // for IP_MULTICAST_LOOP, etc
-#  endif
-#  pragma warning(disable: 4800 4018)
+# ifndef MUSCLE_AVOID_MULTICAST_API
+#  include <ws2ipdef.h>  // for IP_MULTICAST_LOOP, etc
+# endif
+# pragma warning(disable: 4800 4018)
 # endif
 typedef char sockopt_arg;  // Windows setsockopt()/getsockopt() use char pointers
 #else
@@ -1855,10 +1855,12 @@ static IPAddress _customLocalhostIP = invalidIP;  // disabled by default
 void SetLocalHostIPOverride(const IPAddress & ip) {_customLocalhostIP = ip;}
 IPAddress GetLocalHostIPOverride() {return _customLocalhostIP;}
 
-#ifdef MUSCLE_ENABLE_KEEPALIVE_API
+#ifndef MUSCLE_DISABLE_KEEPALIVE_API
 
+#ifdef __linux__
 static inline int KeepAliveMicrosToSeconds(uint64 micros) {return ((micros+(MICROS_PER_SECOND-1))/MICROS_PER_SECOND);}  // round up to the nearest second!
 static inline uint64 KeepAliveSecondsToMicros(int second) {return (second*MICROS_PER_SECOND);}
+#endif
 
 status_t SetSocketKeepAliveBehavior(const ConstSocketRef & sock, uint32 maxProbeCount, uint64 idleTime, uint64 retransmitTime)
 {
