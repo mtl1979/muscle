@@ -5,6 +5,45 @@ key:  - new feature
       * bug fixed
       o other
 
+7.10 Released 12/3/2018
+   - Under C++11 and later, the status_t type is now a
+     class rather than a simple typedef for int32.  It
+     is used pretty much the same way as before, except
+     now it provides better compile-time error-checking.
+   - Under C++11 and later, the status_t type (and its
+     values B_OK, B_ERROR, and B_NO_ERROR) are now part
+     of the muscle namespace.
+   - Added a WithoutNumericSuffix() convenience method to
+     the String class.
+   - The CMakeLists.txt file has been modified so that it
+     is now usable by CMake 2.8.x and higher.
+   o Functions in the C APIs have been modified to return
+     type c_status_t (CB_ERROR or CB_NO_ERROR) rather than
+     status_t, to avoid ambiguities with the new C++11
+     version of status_t in mixed C/C++11 programs.
+   o BitChord::GetNumBitsInBitChord() and friends are now
+     declared as static/constexpr rather than const methods,
+     so that they can be called at compile-time now.
+   o Replaced the MUSCLE_ENABLE_KEEPALIVE_API compile-flag
+     with a new MUSCLE_DISABLE_KEEPALIVE_API flag (i.e.
+     so that the socket-keepalive API is now enabled by
+     default if neither flag is specified)
+   o DOxygen documentation is now generated with C++11
+     enabled (before it was documenting the pre-C++11 API)
+   * In the BitChord class, GetNumBytesInBitChord() and
+     GetNumWordsInBitChord() were mis-named.  Fixed.
+   * Fixed a bug that affected MUSCLE subscriptions that
+     included a QueryFilter:  If a DataNode matched a
+     subscription's node-path string, but its Message-payload
+     didn't match the QueryFilter's criteria (at the time the
+     subscription was created), then future modifications to the
+     DataNode would not cause the subscriber to be notified
+     even if the updated Message-payload did change to match
+     the QueryFilter's criteria.
+   * Modified StorageReflectSession::DoSubscribeRefCallback() to
+     take its argument via an object-pointer rather than
+     smuggling an integer delta-value to it inside a (void *).
+
 7.03 Released 9/28/2018
    - WarnOutOfMemory() now calls PrintStackTrace() (but not more
      often than once every 5 seconds, to avoid spamming)
@@ -818,7 +857,7 @@ key:  - new feature
 
 6.20 Released 4/20/2015
    - Added a new sub-folder besupport/admin_gui.  It contains
-     Fredrik Modéen's GUI shell for more easily running muscled
+     Fredrik ModÃ©en's GUI shell for more easily running muscled
      under BeOS or Haiku.
    - Added new MUSCLE-specific versions of some potentially-insecure
      (per Microsoft) C functions to MuscleSupport.h:  muscleFopen(),
@@ -1230,7 +1269,7 @@ key:  - new feature
    * Updated the Beginner's Guide document to reflect MUSCLE's
      improved UDP support.
    * Merged in some Android compatibility changes provided by
-     Jean-François Mullet.
+     Jean-FranÃ§ois Mullet.
    * Use of the MUSCLE_USE_MUTEXES_FOR_ATOMIC_OPERATIONS compile
      flag would cause MUSCLE to crash on startup due to an
      order-of-operations issue.  This has been fixed now.
@@ -1648,7 +1687,7 @@ key:  - new feature
    - Added a GetGlobalObjectForType() function, which is similar
      to GetDefaultObjectForType() except that the returned reference
      is not read-only.
-   o Merged in Jean-François Mullet's patches to allow MUSCLE to be
+   o Merged in Jean-FranÃ§ois Mullet's patches to allow MUSCLE to be
      compiled cleanly under Android.
    * Fixed the code so that it now compiles cleanly under clang++ 2.1.
    * String::AppendWord() no longer appends a separator string if
@@ -1921,7 +1960,7 @@ key:  - new feature
 
 5.50 Released 4/18/2011
    - Added a qt_muscled_browser subfolder to the qtsupport folder.  qt_muscled_browser
-     is a GUI MUSCLE database browser, based on code contributed by Jean-François Mullet.
+     is a GUI MUSCLE database browser, based on code contributed by Jean-FranÃ§ois Mullet.
    - Added GetFirstKeyWithDefault(), GetLastKeyWithDefault(), GetFirstValueWithDefault(),
      and GetLastValueWithDefault() convenience methods to the Hashtable class.
    - Added a RemoveWithDefault() convenience method to the Hashtable class.
@@ -4347,7 +4386,7 @@ v3.02 Released 9/10/2005
   o Removed the MUSCLE_USE_CLONE support from the Thread class, since it
     didn't work properly anyway.
   * The Win32 implementation of the Thread class would leak a thread handle
-    each time the internal Thread terminated.  Thanks to Eivind Midtgård
+    each time the internal Thread terminated.  Thanks to Eivind MidtgÃ¥rd
     and Raymond Dahlberg for providing the fix!
 
 v3.01 Released 8/13/2005
@@ -4603,7 +4642,7 @@ v2.62 Released 1/1/2005
     a GetSystemPath() function (for locating various important directories
     on the host system), and a GetOSName() function that returns
     the name of the host operating system.
-  o Adopted Jonas Sundström' simplified Makefile for muscled.
+  o Adopted Jonas SundstrÃ¶m' simplified Makefile for muscled.
   * Updated the dev-c++/muscled.dev file to properly build muscled.exe again.
   * The included Python scripts are updated to raise exceptions using
     proper Exception objects, rather than old-style bare-string exceptions.
