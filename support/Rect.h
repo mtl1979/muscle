@@ -291,4 +291,4 @@ DECLARE_ALL_TUPLE_OPERATORS(Rect,float);
 
 } // end namespace muscle
 
-#endif 
+#endif
