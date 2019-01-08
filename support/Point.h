@@ -143,4 +143,4 @@ DECLARE_ALL_TUPLE_OPERATORS(Point,float);
 
 } // end namespace muscle
 
-#endif 
+#endif
