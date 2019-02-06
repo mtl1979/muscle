@@ -26,13 +26,11 @@ DEFINES += -DMUSCLE_AVOID_SIGNAL_HANDLING
 #DEFINES += -DMUSCLE_AVOID_STDINT
 
 CFLAGS = -I.. -I../zlib/zlib -g
+#CFLAGS += -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk
+
 GCCFLAGS = -fno-exceptions -DMUSCLE_NO_EXCEPTIONS -W -Wall -Wno-multichar
 CXXFLAGS = $(CFLAGS) -O3 $(DEFINES)
 CXXFLAGS += -std=c++11
-
-# Uncomment these to enable clang++'s static analyzer (for more thorough error checking)
-#CXXFLAGS += --analyze -Xanalyzer -analyzer-output=text
-#CFLAGS   += --analyze -Xanalyzer -analyzer-output=text
 
 LFLAGS =
 LIBS =  -lpthread
