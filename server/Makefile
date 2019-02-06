@@ -13,9 +13,6 @@ CXXFLAGS  += -std=c++11 $(CFLAGS) $(DEFINES)
 #CXXFLAGS += -DMUSCLE_ENABLE_MEMORY_TRACKING
 #CXXFLAGS += -DMUSCLE_AVOID_STDINT
 
-# Uncomment these to enable clang++'s static analyzer (for more thorough error checking)
-#CFLAGS   += --analyze -Xanalyzer -analyzer-output=text
-
 # compilation flags that are specific to the gcc compiler (hard-coded)
 GCCFLAGS    = -fno-exceptions -DMUSCLE_NO_EXCEPTIONS -W -Wall -Wno-multichar
 
@@ -112,28 +109,6 @@ ifeq ($(OSTYPE), SunOS)
 	CXX = CC
     endif
     LIBS = -lsocket -lnsl
-endif
-
-ifneq (,$(findstring MINGW32,$(OSTYPE)))
-    OSTYPE=MINGW
-endif
-
-ifneq (,$(findstring MINGW64,$(OSTYPE)))
-    OSTYPE=MINGW
-endif
-
-ifeq ($(OSTYPE),MINGW)
-    CC = gcc
-    ARCH = $(shell gcc -dumpmachine | sed 's/-.*//g')
-    ifeq ($(ARCH),x86_64)
-        CXXFLAGS += -m64 -D__MINGW64__ -I/mingw64/x86_64-w64-mingw32/include
-        LFLAGS = -L/mingw64/x86_64-w64-mingw32/lib -L/lib
-        LIBS = -lws2_32 -lwinmm -liphlpapi -lmingwex -lmsvcrt
-    else
-        CXXFLAGS += -m32 -D__MINGW32__ -DMUSCLE_AVOID_IPV6 -D_WIN32_WINNT=0x0501 -I/mingw32/i686-w64-mingw32/include
-        LFLAGS = -L/mingw32/i686-w64-mingw32/lib -L/lib
-        LIBS = -lws2_32 -lwinmm -liphlpapi -lmingwex -lmsvcrt
-    endif
 endif
 
 ifneq (,$(findstring MUSCLE_ENABLE_SSL,$(CXXFLAGS))) # Add OpenSSL-specific files only if OpenSSL is enabled
