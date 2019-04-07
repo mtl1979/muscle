@@ -80,7 +80,7 @@ status_t PathMatcher :: PutPathsFromMessage(const char * pathFieldName, const ch
 
    ConstQueryFilterRef filter;  // declared here so that queries can "bleed down" the list without being specified multiple times
    const String * str;
-   for (uint32 i=0; msg.FindString(pathFieldName, i, &str) == B_NO_ERROR; i++) 
+   for (uint32 i=0; msg.FindString(pathFieldName, i, &str) == B_NO_ERROR; i++)
    {
       if (optFilterFieldName)
       {
@@ -128,7 +128,7 @@ bool PathMatcher :: MatchesPath(const char * path, const Message * optMessage, c
 {
    TCHECKPOINT;
 
-   uint32 numClauses = GetPathDepth(path);
+   const uint32 numClauses = GetPathDepth(path);
    for (HashtableIterator<String, PathMatcherEntry> iter(_entries, HTIT_FLAG_NOREGISTER); iter.HasData(); iter++)
    {
       const StringMatcherQueue * nextSubscription = iter.GetValue().GetParser()();

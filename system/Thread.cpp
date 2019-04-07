@@ -77,9 +77,8 @@ status_t Thread :: StartInternalThread()
 {
    if (IsInternalThreadRunning() == false)
    {
-      bool needsInitialSignal = (_threadData[MESSAGE_THREAD_INTERNAL]._messages.HasItems());
-      status_t ret = StartInternalThreadAux();
-      if (ret == B_NO_ERROR)
+      const bool needsInitialSignal = (_threadData[MESSAGE_THREAD_INTERNAL]._messages.HasItems());
+      if (StartInternalThreadAux() == B_NO_ERROR)
       {
          if (needsInitialSignal) SignalInternalThread();  // make sure he gets his already-queued messages!
          return B_NO_ERROR;
@@ -162,7 +161,7 @@ status_t Thread :: SendMessageAux(int whichQueue, const MessageRef & replyRef)
    if (tsd._queueLock.Lock() == B_NO_ERROR)
    {
       if (tsd._messages.AddTail(replyRef) == B_NO_ERROR) ret = B_NO_ERROR;
-      bool sendNotification = (tsd._messages.GetNumItems() == 1);
+      const bool sendNotification = (tsd._messages.GetNumItems() == 1);
       (void) tsd._queueLock.Unlock();
       if ((sendNotification)&&(_signalLock.Lock() == B_NO_ERROR))
       {
@@ -191,10 +190,10 @@ void Thread :: SignalAux(int whichSocket)
 {
    if (_messageSocketsAllocated)
    {
-      int fd = _threadData[whichSocket]._messageSocket.GetFileDescriptor();
+      const int fd = _threadData[whichSocket]._messageSocket.GetFileDescriptor();
       if (fd >= 0)
       {
-         char junk = 'S';
+         const char junk = 'S';
          (void) send_ignore_eintr(fd, &junk, sizeof(junk), 0);
       }
    }
@@ -282,7 +281,7 @@ void Thread :: QtSocketReadReady(int /*sock*/)
    MessageRef msgRef;
    while(1)
    {
-      int32 numLeft = WaitForNextMessageFromOwner(msgRef, 0);  // 0 because we don't want to block here, this is a poll only
+      const int32 numLeft = WaitForNextMessageFromOwner(msgRef, 0);  // 0 because we don't want to block here, this is a poll only
       if (numLeft >= 0)
       {
          if (MessageReceivedFromOwner(msgRef, numLeft) != B_NO_ERROR)
@@ -547,10 +546,10 @@ void CheckThreadStackUsage(const char * fileName, uint32 line)
    Thread * curThread = Thread::GetCurrentThread();
    if (curThread)
    {
-      uint32 maxUsage = curThread->GetSuggestedStackSize();
+      const uint32 maxUsage = curThread->GetSuggestedStackSize();
       if (maxUsage != 0)  // if the Thread doesn't have a suggested stack size, then we don't know what the limit is
       {
-         uint32 curUsage = curThread->GetCurrentStackUsage();
+         const uint32 curUsage = curThread->GetCurrentStackUsage();
          if (curUsage > maxUsage)
          {
             char buf[20];
