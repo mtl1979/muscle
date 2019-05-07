@@ -6,7 +6,10 @@
 #include "util/NetworkUtilityFunctions.h"  // SendData() and ReceiveData()
 
 #if defined(WIN32) || defined(__CYGWIN__)
-# include <process.h>  // for _beginthreadex()
+# include <process.h>     // for _beginthreadex()
+# ifdef _UNICODE
+#  undef GetEnvironmentStrings   // here because Windows headers are FUBAR ( https://devblogs.microsoft.com/oldnewthing/20130117-00/?p=5533 )
+# endif
 # define USE_WINDOWS_CHILDPROCESSDATAIO_IMPLEMENTATION
 #else
 # if defined(__linux__)
@@ -52,7 +55,7 @@ static void SafeCloseHandle(::HANDLE & h)
 }
 #endif
 
-status_t ChildProcessDataIO :: LaunchChildProcess(const Queue<String> & argq, ChildProcessLaunchFlags launchFlags, const char * optDirectory)
+status_t ChildProcessDataIO :: LaunchChildProcess(const Queue<String> & argq, ChildProcessLaunchFlags launchFlags, const char * optDirectory, const Hashtable<String, String> * optEnvironmentVariables)
 {
    const uint32 numItems = argq.GetNumItems();
    if (numItems == 0) return B_ERROR;
@@ -61,7 +64,7 @@ status_t ChildProcessDataIO :: LaunchChildProcess(const Queue<String> & argq, Ch
    if (argv == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
    for (uint32 i=0; i<numItems; i++) argv[i] = argq[i]();
    argv[numItems] = NULL;
-   status_t ret = LaunchChildProcess(numItems, argv, launchFlags, optDirectory);
+   status_t ret = LaunchChildProcess(numItems, argv, launchFlags, optDirectory, optEnvironmentVariables);
    delete [] argv;
    return ret;
 }
@@ -73,7 +76,7 @@ void ChildProcessDataIO :: SetChildProcessShutdownBehavior(bool okayToKillChild,
    _maxChildWaitTime = maxChildWaitTime;
 }
 
-status_t ChildProcessDataIO :: LaunchChildProcessAux(int argc, const void * args, ChildProcessLaunchFlags launchFlags, const char * optDirectory)
+status_t ChildProcessDataIO :: LaunchChildProcessAux(int argc, const void * args, ChildProcessLaunchFlags launchFlags, const char * optDirectory, const Hashtable<String, String> * optEnvironmentVariables)
 {
    TCHECKPOINT;
 
@@ -132,8 +135,70 @@ status_t ChildProcessDataIO :: LaunchChildProcessAux(int argc, const void * args
                   cmd = UnparseArgs(tmpQ);
                }
 
-               if (CreateProcessA((argc>=0)?(((const char **)args)[0]):NULL, (char *)cmd(), NULL, NULL, TRUE, 0, NULL, optDirectory, &siStartInfo, &piProcInfo))
+               // If environment-vars are specified, we need to create a new environment-variable-block
+               // for the child process to use.  It will be the same as our own, but with the specified
+               // env-vars added/updated in it.
+               bool ok         = true;
+               void * envVars  = NULL;
+               char * newBlock = NULL;
+               if ((optEnvironmentVariables)&&(optEnvironmentVariables->HasItems()))
                {
+                  Hashtable<String, String> curEnvVars;
+
+                  char * oldEnvs = GetEnvironmentStrings();
+                  if (oldEnvs)
+                  {
+                     const char * s = oldEnvs;
+                     while(s)
+                     {
+                        if (*s)
+                        {
+                           const char * equals = strchr(s, '=');
+                           if ((equals ? curEnvVars.Put(String(s, equals-s), equals+1) : curEnvVars.Put(s, GetEmptyString())) == B_NO_ERROR) s = strchr(s, '\0')+1;
+                           else
+                           {
+                              ok = false;
+                              break;
+                           }
+                        }
+                        else break;
+                     }
+
+                     FreeEnvironmentStringsA(oldEnvs);
+                  }
+
+                  (void) curEnvVars.Put(*optEnvironmentVariables);  // update our existing vars with the specified ones
+
+                  // Now we can make a new environment-variables-block out of (curEnvVars)
+                  uint32 newBlockSize = 1;  // this represents the final NUL terminator (after the last string)
+                  for (HashtableIterator<String, String> iter(curEnvVars); iter.HasData(); iter++) newBlockSize += iter.GetKey().FlattenedSize()+iter.GetValue().FlattenedSize();  // includes NUL terminators
+
+                  uint8 * newBlock = newnothrow uint8[newBlockSize];
+                  if (newBlock)
+                  {
+                     uint8 * s = newBlock;
+                     for (HashtableIterator<String, String> iter(curEnvVars); iter.HasData(); iter++)
+                     {
+                        iter.GetKey().Flatten(s);   s += iter.GetKey().FlattenedSize();
+                        *(s-1) = '=';  // replace key's trailing-NUL with an '=' sign
+                        iter.GetValue().Flatten(s); s += iter.GetValue().FlattenedSize();
+                     }
+                     *s++ = '\0';
+
+                     envVars = newBlock;
+                  }
+                  else
+                  {
+                     WARN_OUT_OF_MEMORY;
+                     ok = false;
+                  }
+               }
+
+               if ((ok)&&(CreateProcessA((argc>=0)?(((const char **)args)[0]):NULL, (char *)cmd(), NULL, NULL, TRUE, 0, envVars, optDirectory, &siStartInfo, &piProcInfo)))
+               {
+                  delete [] newBlock;
+                  newBlock = NULL;  // void possible double-delete below
+
                   _childProcess   = piProcInfo.hProcess;
                   _childThread    = piProcInfo.hThread;
 
@@ -150,6 +215,8 @@ status_t ChildProcessDataIO :: LaunchChildProcessAux(int argc, const void * args
                      }
                   }
                }
+
+               delete [] newBlock;
             }
             SafeCloseHandle(childStdinRead);     // cleanup
             SafeCloseHandle(childStdinWrite);    // cleanup
@@ -243,6 +310,11 @@ status_t ChildProcessDataIO :: LaunchChildProcessAux(int argc, const void * args
          // be able to find the executable to run!
          if (realpath(zargv[0], absArgv0) != NULL) zargv[0] = zargv0 = absArgv0;
          if (chdir(optDirectory) < 0) perror("ChildProcessDataIO::chdir");  // FogBugz #10023
+      }
+
+      if (optEnvironmentVariables)
+      {
+         for (HashtableIterator<String,String> iter(*optEnvironmentVariables); iter.HasData(); iter++) (void) setenv(iter.GetKey()(), iter.GetValue()(), 1);
       }
 
       ChildProcessReadyToRun();
@@ -618,10 +690,10 @@ void ChildProcessDataIO :: IOThreadEntry()
 }
 #endif
 
-status_t ChildProcessDataIO :: System(int argc, const char * argv[], ChildProcessLaunchFlags launchFlags, uint64 maxWaitTimeMicros, const char * optDirectory)
+status_t ChildProcessDataIO :: System(int argc, const char * argv[], ChildProcessLaunchFlags launchFlags, uint64 maxWaitTimeMicros, const char * optDirectory, const Hashtable<String, String> * optEnvironmentVariables)
 {
    ChildProcessDataIO cpdio(false);
-   if (cpdio.LaunchChildProcess(argc, argv, launchFlags, optDirectory) == B_NO_ERROR)
+   if (cpdio.LaunchChildProcess(argc, argv, launchFlags, optDirectory, optEnvironmentVariables) == B_NO_ERROR)
    {
       cpdio.WaitForChildProcessToExit(maxWaitTimeMicros);
       return B_NO_ERROR;
@@ -629,7 +701,7 @@ status_t ChildProcessDataIO :: System(int argc, const char * argv[], ChildProces
    else return B_ERROR;
 }
 
-status_t ChildProcessDataIO :: System(const Queue<String> & argq, ChildProcessLaunchFlags launchFlags, uint64 maxWaitTimeMicros, const char * optDirectory)
+status_t ChildProcessDataIO :: System(const Queue<String> & argq, ChildProcessLaunchFlags launchFlags, uint64 maxWaitTimeMicros, const char * optDirectory, const Hashtable<String, String> * optEnvironmentVariables)
 {
    const uint32 numItems = argq.GetNumItems();
    if (numItems == 0) return B_ERROR;
@@ -638,15 +710,15 @@ status_t ChildProcessDataIO :: System(const Queue<String> & argq, ChildProcessLa
    if (argv == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
    for (uint32 i=0; i<numItems; i++) argv[i] = argq[i]();
    argv[numItems] = NULL;
-   const status_t ret = System(numItems, argv, launchFlags, maxWaitTimeMicros, optDirectory);
+   const status_t ret = System(numItems, argv, launchFlags, maxWaitTimeMicros, optDirectory, optEnvironmentVariables);
    delete [] argv;
    return ret;
 }
 
-status_t ChildProcessDataIO :: System(const char * cmdLine, ChildProcessLaunchFlags launchFlags, uint64 maxWaitTimeMicros, const char * optDirectory)
+status_t ChildProcessDataIO :: System(const char * cmdLine, ChildProcessLaunchFlags launchFlags, uint64 maxWaitTimeMicros, const char * optDirectory, const Hashtable<String, String> * optEnvironmentVariables)
 {
    ChildProcessDataIO cpdio(false);
-   if (cpdio.LaunchChildProcess(cmdLine, launchFlags, optDirectory) == B_NO_ERROR)
+   if (cpdio.LaunchChildProcess(cmdLine, launchFlags, optDirectory, optEnvironmentVariables) == B_NO_ERROR)
    {
       cpdio.WaitForChildProcessToExit(maxWaitTimeMicros);
       return B_NO_ERROR;
@@ -654,28 +726,28 @@ status_t ChildProcessDataIO :: System(const char * cmdLine, ChildProcessLaunchFl
    else return B_ERROR;
 }
 
-status_t ChildProcessDataIO :: LaunchIndependentChildProcess(int argc, const char * argv[], const char * optDirectory, ChildProcessLaunchFlags launchFlags)
+status_t ChildProcessDataIO :: LaunchIndependentChildProcess(int argc, const char * argv[], const char * optDirectory, ChildProcessLaunchFlags launchFlags, const Hashtable<String, String> * optEnvironmentVariables)
 {
    ChildProcessDataIO cpdio(true);
    cpdio._childProcessIsIndependent = true;  // so the cpdio dtor won't block waiting for the child to exit
    cpdio.SetChildProcessShutdownBehavior(false);
-   return cpdio.LaunchChildProcess(argc, argv, launchFlags, optDirectory);
+   return cpdio.LaunchChildProcess(argc, argv, launchFlags, optDirectory, optEnvironmentVariables);
 }
 
-status_t ChildProcessDataIO :: LaunchIndependentChildProcess(const char * cmdLine, const char * optDirectory, ChildProcessLaunchFlags launchFlags)
+status_t ChildProcessDataIO :: LaunchIndependentChildProcess(const char * cmdLine, const char * optDirectory, ChildProcessLaunchFlags launchFlags, const Hashtable<String, String> * optEnvironmentVariables)
 {
    ChildProcessDataIO cpdio(true);
    cpdio._childProcessIsIndependent = true;  // so the cpdio dtor won't block waiting for the child to exit
    cpdio.SetChildProcessShutdownBehavior(false);
-   return cpdio.LaunchChildProcess(cmdLine, launchFlags, optDirectory);
+   return cpdio.LaunchChildProcess(cmdLine, launchFlags, optDirectory, optEnvironmentVariables);
 }
 
-status_t ChildProcessDataIO :: LaunchIndependentChildProcess(const Queue<String> & argv, const char * optDirectory, ChildProcessLaunchFlags launchFlags)
+status_t ChildProcessDataIO :: LaunchIndependentChildProcess(const Queue<String> & argv, const char * optDirectory, ChildProcessLaunchFlags launchFlags, const Hashtable<String, String> * optEnvironmentVariables)
 {
    ChildProcessDataIO cpdio(true);
    cpdio._childProcessIsIndependent = true;  // so the cpdio dtor won't block waiting for the child to exit
    cpdio.SetChildProcessShutdownBehavior(false);
-   return cpdio.LaunchChildProcess(argv, launchFlags, optDirectory);
+   return cpdio.LaunchChildProcess(argv, launchFlags, optDirectory, optEnvironmentVariables);
 }
 
 } // end namespace muscle
