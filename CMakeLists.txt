@@ -1,4 +1,9 @@
 cmake_minimum_required (VERSION 2.8)
+
+if(TARGET muscle)
+   return()  # This library has already been built
+endif()
+
 project (muscle)
 set (CMAKE_CXX_STANDARD 11)
 
@@ -51,6 +56,7 @@ target_compile_definitions(muscle PUBLIC MUSCLE_ENABLE_ZLIB_ENCODING MUSCLE_NO_E
 if (APPLE)
    target_link_libraries(muscle "-framework CoreFoundation")
    target_link_libraries(muscle "-framework SystemConfiguration")
+   target_link_libraries(muscle "-framework IOKit")
 endif (APPLE)
 
 if (WIN32)

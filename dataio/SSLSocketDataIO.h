@@ -3,6 +3,11 @@
 
 #include "dataio/TCPSocketDataIO.h"
 #include "util/ByteBuffer.h"
+#include "util/String.h"
+
+// forward declarations to avoid having to drag OpenSSL headers in here
+typedef struct ssl_ctx_st SSL_CTX;
+typedef struct ssl_st     SSL;
 
 namespace muscle {
 
@@ -80,6 +85,30 @@ public:
      */
    status_t SetPrivateKey(const uint8 * bytes, uint32 numBytes);
 
+   /** Same as above, except instead of reading from a raw array we read from a ConstByteBufferRef.
+     * @param privateKeyFile The bytes to read from.  We will retain a reference to this buffer.
+     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     */
+   status_t SetPrivateKey(const ConstByteBufferRef & privateKeyFile);
+
+   /** Call this to set up this session to use a Pre-Shared-Key authentication with
+     * the specified username and password.
+     * @param userName the username to send (on the client side) or require (on the server side)
+     * @param password the username to send (on the client side) or require (on the server side)
+     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     */
+   void SetPreSharedKeyLoginInfo(const String & userName, const String & password);
+
+   /** Returns the pre-shared-key's username, as was previously passed to SetPreSharedKeyLoginInfo().
+     * Default value is an empty string.
+     */
+   const String & GetPreSharedKeyUserName() const {return _pskUserName;}
+
+   /** Returns the pre-shared-key's password, as was previously passed to SetPreSharedKeyLoginInfo().
+     * Default value is an empty string.
+     */
+   const String & GetPreSharedKeyPassword() const {return _pskPassword;}
+
    /** Overridden to return a dummy (always-ready-for-read) socket when necessary,
      * as there are times when we need gateway->DoInput() to be called when even when there
      * aren't any actual bytes present to be read from our TCP socket.
@@ -92,7 +121,15 @@ public:
    virtual void Shutdown();
 
 private:
-   friend class SSLSocketAdapterGateway;
+   friend SSLSocketAdapterGateway;
+
+   static unsigned int pskClientCallbackFunc(SSL * ssl, const char *hint, char * identity, unsigned int maxIdentityLen, unsigned char * psk, unsigned int maxPSKLen);
+   static unsigned int pskServerCallbackFunc(SSL * ssl, const char *identity, unsigned char *outPSKBuf, unsigned int outPSKBufLen);
+
+   unsigned int PSKServerCallback(const char *identity, unsigned char * psk, unsigned int pskLen) const;
+   unsigned int PSKClientCallback(const char * hint, char * identity, unsigned int maxIdentityLen, unsigned char * psk, unsigned int pskLen) const;
+
+   const bool _isServer;  // true iff accept was passed in as true in our ctor
 
    enum {
       SSL_STATE_READ_WANTS_READABLE_SOCKET   = 0x01,
@@ -107,8 +144,11 @@ private:
 
    ConstByteBufferRef _publicKey;
 
-   void * _ctx; // actually (SSL_CTX*) but declared (void *) here so I don't have to #include openssl headers
-   void * _ssl; // actually (SSL*)     but declared (void *) here so I don't have to #include openssl headers
+   String _pskUserName;
+   String _pskPassword;
+
+   SSL_CTX * _ctx;
+   SSL     * _ssl;
 
    DECLARE_COUNTED_OBJECT(SSLSocketDataIO);
 };
