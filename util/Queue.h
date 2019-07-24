@@ -865,6 +865,12 @@ ItemType *
 Queue<ItemType>::
 AddTailAndGet(QQ_SinkItemParam item)
 {
+   if ((GetNumUnusedItemSlots() < 1)&&(IsItemLocatedInThisContainer(item)))
+   {
+      const ItemType temp = QQ_ForwardItem(item); // avoid dangling pointer issue by copying the item to a temporary location
+      return AddTailAndGet(temp);
+   }
+
    ItemType * oldArray;
    if (EnsureSizeAux(_itemCount+1, false, _itemCount+1, &oldArray, false) != B_NO_ERROR) return NULL;
 
@@ -899,6 +905,14 @@ AddTailMulti(const Queue<ItemType> & queue, uint32 startIndex, uint32 numNewItem
 
    const uint32 mySize  = GetNumItems();
    const uint32 newSize = mySize+numNewItems;
+
+   if ((&queue == this)&&(newSize > GetNumAllocatedItemSlots()))
+   {
+      // Avoid re-entrancy problems by making a partial copy of myself to add back into myself
+      Queue<ItemType> temp;
+      return (temp.AddTailMulti(queue, startIndex, numNewItems) == B_NO_ERROR) ? AddTailMulti(temp) : B_ERROR;
+   }
+
    if (EnsureSize(newSize, true) != B_NO_ERROR) return B_ERROR;
    for (uint32 i=mySize; i<newSize; i++) (*this)[i] = queue[startIndex+(i-mySize)];
 
@@ -914,6 +928,13 @@ AddTailMulti(const ItemType * items, uint32 numItems)
    const uint32 newSize = mySize+numItems;
    uint32 rhs = 0;
 
+   if ((newSize > GetNumAllocatedItemSlots())&&(IsItemLocatedInThisContainer(*items)))
+   {
+      // Avoid re-entrancy problems by making a temporary copy of the items before adding them back to myself
+      Queue<ItemType> temp;
+      return (temp.AddTailMulti(items, numItems) == B_NO_ERROR) ? AddTailMulti(temp) : B_ERROR;
+   }
+
    ItemType * oldArray;
    if (EnsureSizeAux(newSize, true, 0, &oldArray, false) != B_NO_ERROR) return B_ERROR;
    for (uint32 i=mySize; i<newSize; i++) (*this)[i] = items[rhs++];
@@ -927,6 +948,12 @@ ItemType *
 Queue<ItemType>::
 AddHeadAndGet(QQ_SinkItemParam item)
 {
+   if ((GetNumUnusedItemSlots() < 1)&&(IsItemLocatedInThisContainer(item)))
+   {
+      const ItemType temp = QQ_ForwardItem(item); // avoid dangling pointer issue by copying the item to a temporary location
+      return AddTailAndGet(temp);
+   }
+
    ItemType * oldArray;
    if (EnsureSizeAux(_itemCount+1, false, _itemCount+1, &oldArray, false) != B_NO_ERROR) return NULL;
    if (_itemCount == 0) _headIndex = _tailIndex = 0;
@@ -958,6 +985,13 @@ AddHeadMulti(const Queue<ItemType> & queue, uint32 startIndex, uint32 numNewItem
    const uint32 hisSize = queue.GetNumItems();
    numNewItems = muscleMin(numNewItems, (startIndex < hisSize) ? (hisSize-startIndex) : 0);
 
+   if ((&queue == this)&&(numNewItems > GetNumUnusedItemSlots()))
+   {
+      // Avoid re-entrancy problems by making a partial copy of myself to prepend back into myself
+      Queue<ItemType> temp;
+      return (temp.AddTailMulti(queue, startIndex, numNewItems) == B_NO_ERROR) ? AddHeadMulti(temp) : B_ERROR;  // yes, AddTailMulti() and then AddHeadMulti() is intentional
+   }
+
    if (EnsureSize(numNewItems+GetNumItems()) != B_NO_ERROR) return B_ERROR;
    for (int32 i=((int)startIndex+numNewItems)-1; i>=(int32)startIndex; i--) (void) AddHead(queue[i]);  // guaranteed not to fail
    return B_NO_ERROR;
@@ -968,6 +1002,13 @@ status_t
 Queue<ItemType>::
 AddHeadMulti(const ItemType * items, uint32 numItems)
 {
+   if ((numItems > GetNumUnusedItemSlots())&&(IsItemLocatedInThisContainer(*items)))
+   {
+      // Avoid re-entrancy problems by making a temporary copy of the items before adding them back to myself
+      Queue<ItemType> temp;
+      return (temp.AddTailMulti(items, numItems) == B_NO_ERROR) ? AddHeadMulti(temp) : B_ERROR;  // Yes, AddTailMulti() and then AddHeadMulti() is intentional
+   }
+
    ItemType * oldArray;
    if (EnsureSizeAux(_itemCount+numItems, &oldArray) != B_NO_ERROR) return B_ERROR;
    for (int32 i=((int32)numItems)-1; i>=0; i--) (void) AddHead(items[i]);  // guaranteed not to fail
@@ -1162,18 +1203,18 @@ template <class ItemType>
 QQ_UniversalSinkItemRef
 status_t
 Queue<ItemType>::
-InsertItemAt(uint32 index, QQ_SinkItemParam newItem)
+InsertItemAt(uint32 index, QQ_SinkItemParam item)
 {
-   if ((GetNumUnusedItemSlots() < 1)&&(IsItemLocatedInThisContainer(newItem)))
+   if ((GetNumUnusedItemSlots() < 1)&&(IsItemLocatedInThisContainer(item)))
    {
-      ItemType temp = QQ_ForwardItem(newItem); // avoid dangling pointer issue by copying the item to a temporary location
+      const ItemType temp = QQ_ForwardItem(item); // avoid dangling pointer issue by copying the item to a temporary location
       return InsertItemAt(index, temp);
    }
 
    // Simple cases
    if (index >  _itemCount) return B_ERROR;
-   if (index == _itemCount) return AddTail(QQ_ForwardItem(newItem));
-   if (index == 0)          return AddHead(QQ_ForwardItem(newItem));
+   if (index == _itemCount) return AddTail(QQ_ForwardItem(item));
+   if (index == 0)          return AddHead(QQ_ForwardItem(item));
 
    // Harder case:  inserting into the middle of the array
    if (index < _itemCount/2)
@@ -1188,7 +1229,7 @@ InsertItemAt(uint32 index, QQ_SinkItemParam newItem)
       if (AddTail() != B_NO_ERROR) return B_ERROR;  // allocate an extra slot
       for (int32 i=((int32)_itemCount)-1; i>((int32)index); i--) ReplaceItemAt(i, QQ_ForwardItem(*GetItemAtUnchecked(i-1)));
    }
-   return ReplaceItemAt(index, QQ_ForwardItem(newItem));
+   return ReplaceItemAt(index, QQ_ForwardItem(item));
 }
 
 template <class ItemType>
