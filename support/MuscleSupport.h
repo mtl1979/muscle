@@ -11,8 +11,8 @@
 #ifndef MuscleSupport_h
 #define MuscleSupport_h
 
-#define MUSCLE_VERSION_STRING "7.31" /**< The current version of the MUSCLE distribution, expressed as an ASCII string */
-#define MUSCLE_VERSION        73100  /**< Current version, expressed as decimal Mmmbb, where (M) is the number before the decimal point, (mm) is the number after the decimal point, and (bb) is reserved */
+#define MUSCLE_VERSION_STRING "7.40" /**< The current version of the MUSCLE distribution, expressed as an ASCII string */
+#define MUSCLE_VERSION        74000  /**< Current version, expressed as decimal Mmmbb, where (M) is the number before the decimal point, (mm) is the number after the decimal point, and (bb) is reserved */
 
 /*! \mainpage MUSCLE Documentation Page
  *
@@ -804,6 +804,8 @@ static inline FILE * muscleFopen(const char * path, const char * mode) {FILE * f
       #include <endian.h>
     #elif defined( __APPLE__ )
       #include <machine/endian.h>
+    #elif defined( __EMSCRIPTEN__ )
+      #include <endian.h>
     #else
       #define LITTLE_ENDIAN   1234    /**< least-significant byte first (vax, pc) */
       #define BIG_ENDIAN      4321    /**< most-significant byte first (IBM, net) */
