@@ -156,7 +156,6 @@ public:
      OptionsAll = 0x3F,
 
      OptionsJAF = (RetrieveSymbol|RetrieveLine)
-
    } StackWalkOptions;
 
    StackWalker(
@@ -252,7 +251,7 @@ protected:
 
    static BOOL __stdcall ReadProcMemCallback(HANDLE hProcess, DWORD64 qwBaseAddress, PVOID lpBuffer, DWORD nSize, LPDWORD lpNumberOfBytesRead);
 
-   friend StackWalkerInternal;
+   friend class StackWalkerInternal;
 };
 
 void _Win32PrintStackTraceForContext(FILE * optFile, CONTEXT * context, uint32 maxDepth)
