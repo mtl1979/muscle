@@ -8,8 +8,15 @@
 # include <mach/mach_port.h>
 # include <mach/mach_interface.h>
 # include <mach/mach_init.h>
-# include <IOKit/pwr_mgt/IOPMLib.h>
-# include <IOKit/IOMessage.h>
+# include <TargetConditionals.h>
+# if !(TARGET_OS_IPHONE)
+#  include <IOKit/pwr_mgt/IOPMLib.h>
+#  include <IOKit/IOMessage.h>
+# else
+#  ifndef MUSCLE_USE_DUMMY_DETECT_NETWORK_CONFIG_CHANGES_SESSION
+#   define MUSCLE_USE_DUMMY_DETECT_NETWORK_CONFIG_CHANGES_SESSION
+#  endif
+# endif
 # include <SystemConfiguration/SystemConfiguration.h>
 #elif WIN32
 # if defined(UNICODE) && !defined(_UNICODE)
@@ -293,9 +300,11 @@ status_t DetectNetworkConfigChangesSession :: AttachedToServer()
 # endif
 # ifdef WIN32
    _wakeupSignal = CreateEvent(0, false, false, 0);
-   if (_wakeupSignal == MY_INVALID_HANDLE_VALUE) return B_ERROR;
+   if (_wakeupSignal == MY_INVALID_HANDLE_VALUE) return B_ERROR("CreateEvent() failed");
 # endif
-   return (AbstractReflectSession::AttachedToServer() == B_NO_ERROR) ? StartInternalThread() : B_ERROR;
+
+   status_t ret;
+   return (AbstractReflectSession::AttachedToServer().IsOK(ret)) ? StartInternalThread() : ret;
 }
 
 void DetectNetworkConfigChangesSession :: EndSession()
@@ -336,7 +345,7 @@ void DetectNetworkConfigChangesSession :: SignalInternalThread()
 }
 
 # ifdef __APPLE__
-
+#  if !(TARGET_OS_IPHONE)
 // MacOS/X Code taken from http://developer.apple.com/technotes/tn/tn1145.html
 static OSStatus MoreSCErrorBoolean(Boolean success)
 {
@@ -498,7 +507,7 @@ Hashtable<String, String> & GetKeyToInterfaceNameTable(DetectNetworkConfigChange
 {
    return s->_scKeyToInterfaceName;
 }
-
+#  endif // TARGET_OS_IPHONE
 # endif  // __APPLE__
 
 #if defined(WIN32) && !defined(MUSCLE_AVOID_NETIOAPI)
@@ -530,7 +539,7 @@ VOID __stdcall InterfaceCallbackDemo(IN PVOID context, IN PMIB_IPINTERFACE_ROW i
 
 #endif
 
-#if defined(__APPLE__) || defined(WIN32)
+#if (defined(__APPLE__) && !(TARGET_OS_IPHONE)) || defined(WIN32)
 static void MySleepCallbackAux(DetectNetworkConfigChangesSession * s, bool isGoingToSleep) {s->MySleepCallbackAux(isGoingToSleep);}
 
 void DetectNetworkConfigChangesSession :: MySleepCallbackAux(bool isAboutToSleep)
@@ -546,7 +555,7 @@ void DetectNetworkConfigChangesSession :: MySleepCallbackAux(bool isAboutToSleep
 }
 #endif
 
-#ifdef __APPLE__
+#if (defined(__APPLE__) && !(TARGET_OS_IPHONE))
 static void * GetRootPortPointerFromSession(const DetectNetworkConfigChangesSession * s) {return s->_rootPortPointer;}
 static void MySleepCallBack(void * refCon, io_service_t /*service*/, natural_t messageType, void * messageArgument)
 {
@@ -648,7 +657,7 @@ void DetectNetworkConfigChangesSession :: InternalThreadEntry()
       powerNotifyRunLoopSource = IONotificationPortGetRunLoopSource(powerNotifyPortRef);
       CFRunLoopAddSource((CFRunLoopRef)_threadRunLoop, powerNotifyRunLoopSource, kCFRunLoopCommonModes);
    }
-   else LogTime(MUSCLE_LOG_WARNING, "DetectNetworkConfigChangesSession::InternalThreadEntry():  IORegisterForSystemPower() failed\n");
+   else LogTime(MUSCLE_LOG_WARNING, "DetectNetworkConfigChangesSession::InternalThreadEntry():  IORegisterForSystemPower() failed [%s]\n", B_ERRNO());
 
    SCDynamicStoreRef storeRef = NULL;
    CFRunLoopSourceRef sourceRef = NULL;
@@ -709,7 +718,7 @@ void DetectNetworkConfigChangesSession :: InternalThreadEntry()
       SetWindowLongPtr(hiddenWindow, GWLP_USERDATA, (LONG) this);
 # endif
    }
-   else LogTime(MUSCLE_LOG_ERROR, "DetectNetworkConfigChangesSession::InternalThreadEntry():  CreateWindow() failed!\n");
+   else LogTime(MUSCLE_LOG_ERROR, "DetectNetworkConfigChangesSession::InternalThreadEntry():  CreateWindow() failed! [%s]\n", B_ERRNO());
 
 # ifndef MUSCLE_AVOID_NETIOAPI
    HANDLE handle1 = MY_INVALID_HANDLE_VALUE; (void) NotifyUnicastIpAddressChange(AF_UNSPEC, &AddressCallbackDemo,   this, FALSE, &handle1);
@@ -753,13 +762,13 @@ void DetectNetworkConfigChangesSession :: InternalThreadEntry()
          }
          else
          {
-            LogTime(MUSCLE_LOG_ERROR, "DetectNetworkConfigChangesSession:  NotifyAddrChange() failed, code %i (%i)\n", nacRet, WSAGetLastError());
+            LogTime(MUSCLE_LOG_ERROR, "DetectNetworkConfigChangesSession:  NotifyAddrChange() failed, code %i (%i) [%s]\n", nacRet, WSAGetLastError(), B_ERRNO());
             break;
          }
       }
       CloseHandle(olap.hEvent);
    }
-   else LogTime(MUSCLE_LOG_ERROR, "DetectNetworkConfigChangesSession:  CreateEvent() failed\n");
+   else LogTime(MUSCLE_LOG_ERROR, "DetectNetworkConfigChangesSession:  CreateEvent() failed [%s]\n", B_ERRNO());
 
 # ifndef MUSCLE_AVOID_NETIOAPI
    if (handle2 != MY_INVALID_HANDLE_VALUE) CancelMibChangeNotify2(handle2);

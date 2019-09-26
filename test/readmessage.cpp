@@ -16,8 +16,8 @@ static String GetBytesSizeString(uint64 val)
    const double b = 1000.0;  // note that we defined 1KB=1000 bytes, not 1024 bytes!
         if (val < b)     return String("%1 bytes").Arg(val);
    else if (val < b*b)   return String("%1kB").Arg(((double)val)/b,       "%.0f");
-   else if (val < b*b*b) return String("%1MB").Arg(((double)val)/(b*b),   "%.01");
-   else                  return String("%1GB").Arg(((double)val)/(b*b*b), "%.02");
+   else if (val < b*b*b) return String("%1MB").Arg(((double)val)/(b*b),   "%.01f");
+   else                  return String("%1GB").Arg(((double)val)/(b*b*b), "%.02f");
 }
 
 static void GenerateMessageSizeReportAux(const String & curPath, Message & msg, Hashtable<String, uint32> & results)
@@ -64,6 +64,8 @@ int main(int argc, char ** argv)
       FileDataIO fdio(fpIn);
 
       const uint64 fileSize = fdio.GetLength();
+      printf("fileSize=%lli\n", fileSize);
+
       ByteBufferRef buf = GetByteBufferFromPool(fileSize);
       if (buf() == NULL)
       {
@@ -86,8 +88,9 @@ int main(int argc, char ** argv)
          buf = infBuf;
       }
 
+      status_t ret;
       Message msg;
-      if (msg.Unflatten(infBuf()->GetBuffer(), infBuf()->GetNumBytes()) == B_NO_ERROR)
+      if (msg.Unflatten(buf()->GetBuffer(), buf()->GetNumBytes()).IsOK(ret))
       {
          MessageRef infMsg = InflateMessage(MessageRef(&msg, false));
          if ((infMsg())&&(infMsg() != &msg))
@@ -105,13 +108,13 @@ int main(int argc, char ** argv)
       }
       else
       {
-         LogTime(MUSCLE_LOG_CRITICALERROR, "Error unflattening message! (" INT32_FORMAT_SPEC " bytes read)\n", numBytesRead);
+         LogTime(MUSCLE_LOG_CRITICALERROR, "Error [%s] unflattening message! (" INT32_FORMAT_SPEC " bytes read)\n", ret(), numBytesRead);
          retVal = 10;
       }
    }
    else
    {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "Could not read input flattened-message file [%s]\n", fileName);
+      LogTime(MUSCLE_LOG_CRITICALERROR, "Could not read input flattened-message file [%s] [%s]\n", fileName, B_ERRNO());
       retVal = 10;
    }
 

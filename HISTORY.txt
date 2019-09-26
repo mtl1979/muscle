@@ -5,6 +5,47 @@ key:  - new feature
       * bug fixed
       o other
 
+7.50 Released 9/25/2019
+   - Merged in some iOS-compatibility patches supplied
+     by Arno Gramatke.  The CMakeLists.txt now does the
+     right thing for iOS, and several non-iOS-supported
+     classes (i.e.  DetectNetworkConfigChangesSession
+     and RS232DataIO) now compile under iOS as dummy/no-op
+     classes, rather than breaking the build.
+   - Added a B_ERRNO macro which is similar to B_ERROR,
+     except it automatically references the current
+     errno-string, as returned by strerror(errno).
+   - Added various status_t error-constants for "common"
+     error types, such as B_BAD_ARGUMENT, B_DATA_NOT_FOUND,
+     B_OUT_OF_MEMORY, B_FILE_NOT_FOUND, etc.  See
+     support/MuscleSupport.h for the full list.
+   - Added IsOK(status_t &) and IsError(status_t &) methods
+     to the status_t class, to support short-circuit logic
+     chains that return an error-description string
+     (see test/teststatus.cpp for examples)
+   - Added a RETURN_OUT_OF_MEMORY macro to formalize the
+     common "WARN_OUT_OF_MEMORY; return B_OUT_OF_MEMORY;" couplet.
+   - Merged in Mika Lindqvist's patch for VS2019 and ARM64.
+   o Instead of an enum/int, the status_t class now holds a
+     (const char *) containing a human-readable description
+     of the error that occurred (or a NULL pointer to indicate
+     that the operation succeeded).
+   o B_ERROR now optionally takes a (const char *) argument
+     specifying a human-readable error-string describing
+     the error that occurred.
+   o Updated the codebase to return more specific status_t
+     error strings when possible (instead of only B_ERROR).
+   o Updates the codebase so that LogTime() calls reporting
+     an error now include the state-string of the relevant
+     status_t variable, when applicable.
+   o The Mutex, SharedMemory, TarFileWriter, and ZLibCodec
+     classes all now now inherit from NotCopyable.
+   * Updated the friend-template work-around in Hashtable.h
+     to include g++ 8.3.x
+   * Fixed an output-formatting bug in test/readmessages.cpp
+   * Fixed a bug in test/readmessage.cpp that could cause
+     readmessage to crash when reading an invalid file.
+
 7.41 Released 8/8/2019
    - Added a SwapContents() method to the StringMatcher class,
      and also a move-constructor and a move-assignment-operator.

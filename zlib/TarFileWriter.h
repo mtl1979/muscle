@@ -3,6 +3,7 @@
 #ifndef TarFileUtilityFunctions_h
 #define TarFileUtilityFunctions_h
 
+#include "support/NotCopyable.h"
 #include "dataio/SeekableDataIO.h"
 
 namespace muscle {
@@ -13,7 +14,7 @@ namespace muscle {
  *  only the writing of a .tar file is supported; at some point I may add
  *  support for reading .tar files as well.
  */
-class TarFileWriter
+class TarFileWriter : public NotCopyable
 {
 public:
    /** Default constructor. */
@@ -37,8 +38,8 @@ public:
    ~TarFileWriter();
 
    /** Closes the current file (if any is open) and returns to the just-default-constructed state.
-     * @returns B_NO_ERROR on success, or B_ERROR if there was an error writing out header data.
-     *          Note that the file will always be closed, even if we return B_ERROR.
+     * @returns B_NO_ERROR on success, or an error code if there was an error writing out header data.
+     *          Note that this method will always close the held file-handle, even if it returns an error-code.
      */
    status_t Close();
 
@@ -62,7 +63,7 @@ public:
      * @param modificationTime A timestamp indicating the file's last modification time (microseconds since 1970)
      * @param linkIndicator one of the TAR_LINK_INDICATOR_* values
      * @param linkedFileName Name of the linked file (if any);
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t WriteFileHeader(const char * fileName, uint32 fileMode, uint32 ownerID, uint32 groupID, uint64 modificationTime, int linkIndicator, const char * linkedFileName);
 
@@ -70,13 +71,13 @@ public:
      * Three must be a file-header currently active for this call to succeed.
      * @param fileData Pointer to some data bytes to write into the tar file.
      * @param numBytes How many bytes (fileData) points to.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t WriteFileData(const uint8 * fileData, uint32 numBytes);
 
    /** Updates the current file-header-block and resets our state to receive the next one.
      * Note that Close() and WriteFileHeader() will call FinishCurrentFileDataBlock() if necessary, so calling this method isn't strictly necessary.
-     * @returns B_NO_ERROR on success (or if no header-block was open), or B_ERROR if there was an error updating the header block.
+     * @returns B_NO_ERROR on success (or if no header-block was open), or an error code if there was an error updating the header block.
      */
    status_t FinishCurrentFileDataBlock();
 

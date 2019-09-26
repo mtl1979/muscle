@@ -81,7 +81,7 @@ public:
     *  Note that only 32-bit seeks are supported in this implementation.
     *  @param offset Where to seek to.
     *  @param whence IO_SEEK_SET, IO_SEEK_CUR, or IO_SEEK_END.
-    *  @return B_NO_ERROR on success, B_ERROR on failure
+    *  @return B_NO_ERROR on success, or B_BAD_ARGUMENT on failure.
     */
    virtual status_t Seek(int64 offset, int whence)
    {
@@ -93,9 +93,9 @@ public:
          case IO_SEEK_SET:  newSeekPos = o;          break;
          case IO_SEEK_CUR:  newSeekPos = _seekPos+o; break;
          case IO_SEEK_END:  newSeekPos = fileLen-o;  break;
-         default:           return B_ERROR;
+         default:           return B_BAD_ARGUMENT;
       }
-      if (newSeekPos < 0) return B_ERROR;
+      if (newSeekPos < 0) return B_BAD_ARGUMENT;
       _seekPos = newSeekPos;
       return B_NO_ERROR;
    }

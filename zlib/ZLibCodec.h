@@ -5,8 +5,9 @@
 
 #ifdef MUSCLE_ENABLE_ZLIB_ENCODING
 
+# include "support/NotCopyable.h"
 # include "util/ByteBuffer.h"
-# include "zlib/zlib.h"
+# include "zlib/zlib/zlib.h"
 
 namespace muscle {
 
@@ -15,7 +16,7 @@ class DataIO;
 /** This class is a handy wrapper around the zlib C functions.
   * It quickly and easily inflates and deflates data to/from independently compressed chunks.
   */
-class ZLibCodec MUSCLE_FINAL_CLASS
+class ZLibCodec MUSCLE_FINAL_CLASS : public NotCopyable
 {
 public:
    /** Constructor.
@@ -78,7 +79,7 @@ public:
      *                    after the last compressed-data byte.  The values in these bytes
      *                    are undefined; the caller can write footer data to them if desired.
      *                    Leave this set to zero if you're not sure of what you are doing.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t Deflate(const uint8 * rawData, uint32 numBytes, bool independent, ByteBuffer & targetBuf, uint32 addHeaderBytes=0, uint32 addFooterBytes=0);
 
@@ -124,7 +125,7 @@ public:
      *                    after the last compressed-data byte.  The values in these bytes
      *                    are undefined; the caller can write footer data to them if desired.
      *                    Leave this set to zero if you're not sure of what you are doing.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t Deflate(const ByteBuffer & rawData, bool independent, ByteBuffer & targetBuf, uint32 addHeaderBytes=0, uint32 addFooterBytes=0) {return Deflate(rawData.GetBuffer(), rawData.GetNumBytes(), independent, targetBuf, addHeaderBytes, addFooterBytes);}
 
@@ -140,7 +141,7 @@ public:
      * @param compressedData The compressed data to expand.  This should be data that was previously produced by the Deflate() method.
      * @param numBytes The number of bytes (compressedData) points to
      * @param targetBuf On success, this ByteBuffer object will contain the inflated data.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t Inflate(const uint8 * compressedData, uint32 numBytes, ByteBuffer & targetBuf);
 
@@ -154,7 +155,7 @@ public:
      * than allocating a new ByteBuffer from the byte-buffer pool.
      * @param compressedData The compressed data to expand.  This should be data that was previously produced by the Deflate() method.
      * @param targetBuf On success, this ByteBuffer object will contain the deflated data.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t Inflate(const ByteBuffer & compressedData, ByteBuffer & targetBuf) {return Inflate(compressedData.GetBuffer(), compressedData.GetNumBytes(), targetBuf);}
 
@@ -191,7 +192,7 @@ public:
      *                    compression efficiency, but allows for more flexibility.
      * @param numRawBytes The number of bytes of raw data we should read from (sourceRawIO).
      *                    Note that if fewer than (this many) bytes of data can be read from (sourceRawIO) then this operation will fail.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t ReadAndDeflateAndWrite(DataIO & sourceRawIO, DataIO & destDeflatedIO, bool independent, uint32 numRawBytes);
 
@@ -199,7 +200,7 @@ public:
      * @note All DataIO objects should be set to blocking mode, as this is a synchronous operation.
      * @param sourceDeflatedIO The DataIO to read the zlib-compressed/deflated data from.  (Should be data that was previously produced by ReadAndDeflateAndWrite())
      * @param destInflatedIO The DataIO to write the inflated/raw data to.
-     * @returns B_NO_ERROR on success, or B_ERROR on failure.
+     * @returns B_NO_ERROR on success, or an error code on failure.
      */
    status_t ReadAndInflateAndWrite(DataIO & sourceDeflatedIO, DataIO & destInflatedIO);
 
