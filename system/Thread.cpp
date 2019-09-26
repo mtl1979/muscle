@@ -78,13 +78,15 @@ status_t Thread :: StartInternalThread()
    if (IsInternalThreadRunning() == false)
    {
       const bool needsInitialSignal = (_threadData[MESSAGE_THREAD_INTERNAL]._messages.HasItems());
-      if (StartInternalThreadAux() == B_NO_ERROR)
+      status_t ret;
+      if (StartInternalThreadAux().IsOK(ret))
       {
          if (needsInitialSignal) SignalInternalThread();  // make sure he gets his already-queued messages!
          return B_NO_ERROR;
       }
+      else return ret;
    }
-   return B_ERROR;
+   return B_BAD_OBJECT;
 }
 
 status_t Thread :: StartInternalThreadAux()
@@ -110,10 +112,10 @@ status_t Thread :: StartInternalThreadAux()
          pthread_attr_init(&attr);
          pthread_attr_setstacksize(&attr, _suggestedStackSize);
       }
-      if (pthread_create(&_thread, (_suggestedStackSize!=0)?&attr:NULL, InternalThreadEntryFunc, this) == 0) return B_NO_ERROR;
+      return (pthread_create(&_thread, (_suggestedStackSize!=0)?&attr:NULL, InternalThreadEntryFunc, this) == 0) ? B_NO_ERROR : B_ERRNO;
 #elif defined(MUSCLE_PREFER_WIN32_OVER_QT)
       typedef unsigned (__stdcall *PTHREAD_START) (void *);
-      if ((_thread = (::HANDLE)_beginthreadex(NULL, _suggestedStackSize, (PTHREAD_START)InternalThreadEntryFunc, this, 0, (unsigned *)&_threadID)) != NULL) return B_NO_ERROR;
+      return ((_thread = (::HANDLE)_beginthreadex(NULL, _suggestedStackSize, (PTHREAD_START)InternalThreadEntryFunc, this, 0, (unsigned *)&_threadID)) != NULL) ? B_NO_ERROR : B_ERRNO;
 #elif defined(MUSCLE_USE_QT_THREADS)
       _thread.start();
       return B_NO_ERROR;
@@ -121,18 +123,28 @@ status_t Thread :: StartInternalThreadAux()
       if ((_thread = spawn_thread(InternalThreadEntryFunc, "MUSCLE Thread", B_NORMAL_PRIORITY, this)) >= 0)
       {
          if (resume_thread(_thread) == B_NO_ERROR) return B_NO_ERROR;
-                                              else kill_thread(_thread);
+         else
+         {
+            ret = B_ERRNO;
+            kill_thread(_thread);
+            return ret;
+         }
       }
 #elif defined(__ATHEOS__)
       if ((_thread = spawn_thread("MUSCLE Thread", InternalThreadEntryFunc, NORMAL_PRIORITY, 32767, this)) >= 0)
       {
          if (resume_thread(_thread) == B_NO_ERROR) return B_NO_ERROR;
+         else
+         {
+            ret = B_ERRNO;
+            return ret;
+         }
       }
 #endif
 
       _threadRunning = false;  // oops, nevermind, thread spawn failed
    }
-   return B_ERROR;
+   return B_BAD_OBJECT;
 }
 
 void Thread :: ShutdownInternalThread(bool waitForThread)
@@ -156,21 +168,20 @@ status_t Thread :: SendMessageToOwner(const MessageRef & ref)
 
 status_t Thread :: SendMessageAux(int whichQueue, const MessageRef & replyRef)
 {
-   status_t ret = B_ERROR;
+   status_t ret;
    ThreadSpecificData & tsd = _threadData[whichQueue];
-   if (tsd._queueLock.Lock() == B_NO_ERROR)
+   if (tsd._queueLock.Lock().IsOK(ret))
    {
-      if (tsd._messages.AddTail(replyRef) == B_NO_ERROR) ret = B_NO_ERROR;
-      const bool sendNotification = (tsd._messages.GetNumItems() == 1);
+      const bool sendNotification = ((tsd._messages.AddTail(replyRef).IsOK(ret))&&(tsd._messages.GetNumItems() == 1));
       (void) tsd._queueLock.Unlock();
-      if ((sendNotification)&&(_signalLock.Lock() == B_NO_ERROR))
+      if ((sendNotification)&&(_signalLock.Lock().IsOK(ret)))
       {
          switch(whichQueue)
          {
             case MESSAGE_THREAD_INTERNAL: SignalInternalThread(); break;
             case MESSAGE_THREAD_OWNER:    SignalOwner();          break;
          }
-         _signalLock.Unlock();
+         (void) _signalLock.Unlock();
       }
    }
    return ret;
@@ -269,7 +280,7 @@ void Thread :: InternalThreadEntry()
    while(true)
    {
       MessageRef msgRef;
-      int32 numLeft = WaitForNextMessageFromOwner(msgRef);
+      const int32 numLeft = WaitForNextMessageFromOwner(msgRef);
       if ((numLeft >= 0)&&(MessageReceivedFromOwner(msgRef, numLeft) != B_NO_ERROR)) break;
    }
 #endif
@@ -312,7 +323,7 @@ status_t Thread :: WaitForInternalThreadToExit()
          _thread.join();
 # if !defined(MUSCLE_NO_EXCEPTIONS)
       }
-      catch(...) {return B_ERROR;}
+      catch(...) {return B_LOGIC_ERROR;}
 # endif
 #elif defined(MUSCLE_USE_PTHREADS)
       (void) pthread_join(_thread, NULL);
@@ -331,7 +342,7 @@ status_t Thread :: WaitForInternalThreadToExit()
       CloseSockets();
       return B_NO_ERROR;
    }
-   else return B_ERROR;
+   else return B_BAD_OBJECT;
 }
 
 Queue<MessageRef> * Thread :: LockAndReturnMessageQueue()
@@ -385,9 +396,10 @@ void Thread::InternalThreadEntryAux()
       _curThreadsMutex.Unlock();
    }
 
-   if ((_threadPriority != PRIORITY_UNSPECIFIED)&&(SetThreadPriorityAux(_threadPriority) != B_NO_ERROR))
+   status_t ret;
+   if ((_threadPriority != PRIORITY_UNSPECIFIED)&&(SetThreadPriorityAux(_threadPriority).IsError(ret)))
    {
-      LogTime(MUSCLE_LOG_ERROR, "Thread %p:  Unable to set thread priority to %i\n", this, _threadPriority);
+      LogTime(MUSCLE_LOG_ERROR, "Thread %p:  Unable to set thread priority to %i [%s]\n", this, _threadPriority, ret());
    }
 
    if (_threadData[MESSAGE_THREAD_OWNER]._messages.HasItems()) SignalOwner();
@@ -454,12 +466,13 @@ status_t Thread :: SetThreadPriority(int newPriority)
 {
    if (IsInternalThreadRunning())
    {
-      if (SetThreadPriorityAux(newPriority) == B_NO_ERROR)
+      status_t ret;
+      if (SetThreadPriorityAux(newPriority).IsOK(ret))
       {
          _threadPriority = newPriority;
          return B_NO_ERROR;
       }
-      else return B_ERROR;
+      else return ret;
    }
    else
    {
@@ -512,32 +525,32 @@ status_t Thread :: SetThreadPriorityAux(int newPriority)
    int schedPolicy;
    sched_param param;
 # if defined(MUSCLE_USE_CPLUSPLUS11_THREADS)
-   if (pthread_getschedparam(_thread.native_handle(), &schedPolicy, &param) != 0) return B_ERROR;
+   if (pthread_getschedparam(_thread.native_handle(), &schedPolicy, &param) != 0) return B_ERRNO;
 # else
-   if (pthread_getschedparam(_thread, &schedPolicy, &param) != 0) return B_ERROR;
+   if (pthread_getschedparam(_thread, &schedPolicy, &param) != 0) return B_ERRNO;
 # endif
 
    const int minPrio = sched_get_priority_min(schedPolicy);
    const int maxPrio = sched_get_priority_max(schedPolicy);
-   if ((minPrio == -1)||(maxPrio == -1)) return B_ERROR;
+   if ((minPrio == -1)||(maxPrio == -1)) return B_UNIMPLEMENTED;
 
    param.sched_priority = muscleClamp(((newPriority*(maxPrio-minPrio))/(NUM_PRIORITIES-1))+minPrio, minPrio, maxPrio);
 # if defined(MUSCLE_USE_CPLUSPLUS11_THREADS)
-   return (pthread_setschedparam(_thread.native_handle(), schedPolicy, &param) == 0) ? B_NO_ERROR : B_ERROR;
+   return (pthread_setschedparam(_thread.native_handle(), schedPolicy, &param) == 0) ? B_NO_ERROR : B_ERRNO;
 # else
-   return (pthread_setschedparam(_thread, schedPolicy, &param) == 0) ? B_NO_ERROR : B_ERROR;
+   return (pthread_setschedparam(_thread, schedPolicy, &param) == 0) ? B_NO_ERROR : B_ERRNO;
 # endif
 #elif defined(MUSCLE_PREFER_WIN32_OVER_QT)
 # if defined(MUSCLE_USE_CPLUSPLUS11_THREADS)
-   return ::SetThreadPriority(_thread.native_handle(), MuscleThreadPriorityToWindowsThreadPriority(newPriority)) ? B_NO_ERROR : B_ERROR;
+   return ::SetThreadPriority(_thread.native_handle(), MuscleThreadPriorityToWindowsThreadPriority(newPriority)) ? B_NO_ERROR : B_ERRNO;
 # else
-   return ::SetThreadPriority(_thread, MuscleThreadPriorityToWindowsThreadPriority(newPriority)) ? B_NO_ERROR : B_ERROR;
+   return ::SetThreadPriority(_thread, MuscleThreadPriorityToWindowsThreadPriority(newPriority)) ? B_NO_ERROR : B_ERRNO;
 # endif
 #elif defined(MUSCLE_USE_QT_THREADS)
    _thread.setPriority(MuscleThreadPriorityToQtThreadPriority(newPriority));
    return B_NO_ERROR;
 #else
-   return B_ERROR;  // dunno how to set thread priorities on this platform
+   return B_UNIMPLEMENTED;  // dunno how to set thread priorities on this platform
 #endif
 }
 

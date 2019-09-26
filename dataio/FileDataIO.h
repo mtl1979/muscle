@@ -60,22 +60,20 @@ public:
     *  @note this subclass only supports 32-bit offsets.
     *  @param offset Where to seek to.
     *  @param whence IO_SEEK_SET, IO_SEEK_CUR, or IO_SEEK_END.
-    *  @return B_NO_ERROR on success, B_ERROR on failure.
+    *  @return B_NO_ERROR on success, an error code on failure.
     */
    virtual status_t Seek(int64 offset, int whence)
    {
-      if (_file)
+      if (_file == NULL) return B_BAD_OBJECT;
+
+      switch(whence)
       {
-         switch(whence)
-         {
-            case IO_SEEK_SET:  whence = SEEK_SET;  break;
-            case IO_SEEK_CUR:  whence = SEEK_CUR;  break;
-            case IO_SEEK_END:  whence = SEEK_END;  break;
-            default:           return B_ERROR;
-         }
-         if (fseek(_file, (long) offset, whence) == 0) return B_NO_ERROR;
+         case IO_SEEK_SET:  whence = SEEK_SET;  break;
+         case IO_SEEK_CUR:  whence = SEEK_CUR;  break;
+         case IO_SEEK_END:  whence = SEEK_END;  break;
+         default:           return B_BAD_ARGUMENT;
       }
-      return B_ERROR;
+      return (fseek(_file, (long) offset, whence) == 0) ? B_NO_ERROR : B_ERRNO;
    }
 
    /** Returns our current position in the file.

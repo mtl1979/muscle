@@ -20,22 +20,11 @@ static uint32 _factoryIDCounter = 0L;
 
 static uint32 GetNextGlobalID(uint32 & counter)
 {
-   uint32 ret;
-
    Mutex * ml = GetGlobalMuscleLock();
    MASSERT(ml, "Please instantiate a CompleteSetupSystem object on the stack before creating any session or session-factory objects (at beginning of main() is preferred)\n");
 
-   if (ml->Lock() == B_NO_ERROR)
-   {
-      ret = counter++;
-      ml->Unlock();
-   }
-   else
-   {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "Could not lock global muscle lock while assigning new ID!!?!\n");
-      ret = counter++;  // do it anyway, I guess
-   }
-   return ret;
+   MutexGuard mg(*ml);
+   return counter++;
 }
 
 ReflectSessionFactory :: ReflectSessionFactory()
@@ -46,15 +35,14 @@ ReflectSessionFactory :: ReflectSessionFactory()
 
 status_t ProxySessionFactory :: AttachedToServer()
 {
-   if (ReflectSessionFactory::AttachedToServer() != B_NO_ERROR) return B_ERROR;
+   status_t ret;
+   if (ReflectSessionFactory::AttachedToServer().IsError(ret)) return ret;
 
-   status_t ret = B_NO_ERROR;
    if (_slaveRef())
    {
       _slaveRef()->SetOwner(GetOwner());
-      ret = _slaveRef()->AttachedToServer();
-      if (ret == B_NO_ERROR) _slaveRef()->SetFullyAttachedToServer(true);
-                        else _slaveRef()->SetOwner(NULL);
+      if (_slaveRef()->AttachedToServer().IsOK(ret)) _slaveRef()->SetFullyAttachedToServer(true);
+                                                else _slaveRef()->SetOwner(NULL);
    }
    return ret;
 }
@@ -129,7 +117,7 @@ AbstractReflectSession ::
 AddOutgoingMessage(const MessageRef & ref)
 {
    MASSERT(IsAttachedToServer(), "Can not call AddOutgoingMessage() while not attached to the server");
-   return (_gateway()) ? _gateway()->AddOutgoingMessage(ref) : B_ERROR;
+   return _gateway() ? _gateway()->AddOutgoingMessage(ref) : B_BAD_OBJECT;
 }
 
 status_t
@@ -169,50 +157,49 @@ Reconnect()
       if (CreateConnectedSocketPair(sock, tempSockRef) == B_NO_ERROR) doTCPConnect = false;
    }
 
-   if (sock())
+   if (sock() == NULL) return B_IO_ERROR;
+
+   DataIORef io = CreateDataIO(sock);
+   if (io() == NULL) return B_ERROR("CreateDataIO() failed");
+
+   if (_gateway() == NULL)
    {
-      DataIORef io = CreateDataIO(sock);
-      if (io())
-      {
-         if (_gateway() == NULL)
-         {
-            _gateway = CreateGateway();
-            if (_gateway() == NULL) return B_ERROR;
-         }
+      _gateway = CreateGateway();
+      if (_gateway() == NULL) return B_ERROR("CreateGateway() failed");
+   }
 
 #ifdef MUSCLE_ENABLE_SSL
-         // auto-wrap the user's gateway and socket in the necessary SSL adapters!
-         if ((publicKey())&&(dynamic_cast<TCPSocketDataIO *>(io()) != NULL))
-         {
-            SSLSocketDataIO * ssio = newnothrow SSLSocketDataIO(sock, false, false);
-            if (ssio == NULL) {WARN_OUT_OF_MEMORY; return B_ERROR;}
-            io.SetRef(ssio);
-            if (ssio->SetPublicKeyCertificate(publicKey) != B_NO_ERROR) return B_ERROR;
+   status_t ret;
 
-            if (dynamic_cast<SSLSocketAdapterGateway *>(_gateway()) == NULL)
-            {
-               _gateway.SetRef(newnothrow SSLSocketAdapterGateway(_gateway));
-               if (_gateway() == NULL) return B_ERROR;
-            }
-         }
-#endif
+   // auto-wrap the user's gateway and socket in the necessary SSL adapters!
+   if ((publicKey())&&(dynamic_cast<TCPSocketDataIO *>(io()) != NULL))
+   {
+      SSLSocketDataIO * ssio = newnothrow SSLSocketDataIO(sock, false, false);
+      if (ssio == NULL) RETURN_OUT_OF_MEMORY;
+      io.SetRef(ssio);
+      if (ssio->SetPublicKeyCertificate(publicKey).IsError(ret)) return ret;
 
-         _gateway()->SetDataIO(io);
-         if (isReady)
-         {
-            _isConnected = _wasConnected = true;
-            AsyncConnectCompleted();
-         }
-         else
-         {
-            _isConnected = false;
-            SetConnectingAsync(doTCPConnect);
-         }
-         _scratchReconnected = true;   // tells ReflectServer not to shut down our new IO!
-         return B_NO_ERROR;
+      if (dynamic_cast<SSLSocketAdapterGateway *>(_gateway()) == NULL)
+      {
+         _gateway.SetRef(newnothrow SSLSocketAdapterGateway(_gateway));
+         if (_gateway() == NULL) RETURN_OUT_OF_MEMORY;
       }
    }
-   return B_ERROR;
+#endif
+
+   _gateway()->SetDataIO(io);
+   if (isReady)
+   {
+      _isConnected = _wasConnected = true;
+      AsyncConnectCompleted();
+   }
+   else
+   {
+      _isConnected = false;
+      SetConnectingAsync(doTCPConnect);
+   }
+   _scratchReconnected = true;   // tells ReflectServer not to shut down our new IO!
+   return B_NO_ERROR;
 }
 
 ConstSocketRef
@@ -434,9 +421,11 @@ Pulse(const PulseArgs & args)
          // FogBugz #3810
          if (_wasConnected) LogTime(MUSCLE_LOG_DEBUG, "%s is attempting to auto-reconnect...\n", GetSessionDescriptionString()());
          _reconnectTime = MUSCLE_TIME_NEVER;
-         if (Reconnect() != B_NO_ERROR)
+
+         status_t ret;
+         if (Reconnect().IsError(ret))
          {
-            LogTime(MUSCLE_LOG_DEBUG, "%s: Could not auto-reconnect, will try again later...\n", GetSessionDescriptionString()());
+            LogTime(MUSCLE_LOG_DEBUG, "%s: Could not auto-reconnect [%s], will try again later...\n", ret(), GetSessionDescriptionString()());
             PlanForReconnect();  // okay, we'll try again later!
          }
       }

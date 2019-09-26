@@ -15,9 +15,10 @@ SSLSocketDataIO :: SSLSocketDataIO(const ConstSocketRef & sockfd, bool blocking,
    , _sslState(0)
    , _forceReadReady(false)
 {
+   status_t ret;
    bool ok = false;
    ConstSocketRef tempSocket;  // yes, it's intentional that this socket will be closed as soon as we exit this scope
-   if (CreateConnectedSocketPair(tempSocket, _alwaysReadableSocket) == B_NO_ERROR)
+   if (CreateConnectedSocketPair(tempSocket, _alwaysReadableSocket).IsOK(ret))
    {
       _ctx = SSL_CTX_new(TLS_method());
       if (_ctx)
@@ -48,7 +49,7 @@ SSLSocketDataIO :: SSLSocketDataIO(const ConstSocketRef & sockfd, bool blocking,
       }
       else LogTime(MUSCLE_LOG_ERROR, "SSLSocketDataIO:  SSL_CTX_new() failed!\n");
    }
-   else LogTime(MUSCLE_LOG_ERROR, "SSLSocketDataIO:  Error setting up dummy socket pair!\n");
+   else LogTime(MUSCLE_LOG_ERROR, "SSLSocketDataIO:  Error setting up dummy socket pair! [%s]\n", ret());
 
    if (ok == false) Shutdown();  // might as well clean up now
 }
@@ -67,14 +68,15 @@ void SSLSocketDataIO :: Shutdown()
 
 status_t SSLSocketDataIO :: SetPrivateKey(const char * path)
 {
-   return ((_ssl)&&(SSL_use_PrivateKey_file(_ssl, path, SSL_FILETYPE_PEM) == 1)) ? B_NO_ERROR : B_ERROR;
+   if (_ssl == NULL) return B_BAD_OBJECT;
+   return (SSL_use_PrivateKey_file(_ssl, path, SSL_FILETYPE_PEM) == 1) ? B_NO_ERROR : B_FILE_NOT_FOUND;
 }
 
 status_t SSLSocketDataIO :: SetPrivateKey(const uint8 * bytes, uint32 numBytes)
 {
-   if (_ssl == NULL) return B_ERROR;
+   if (_ssl == NULL) return B_BAD_OBJECT;
 
-   status_t ret = B_ERROR;
+   status_t ret;
 
    BIO * in = BIO_new_mem_buf((void *)bytes, numBytes);
    if (in)
@@ -82,40 +84,46 @@ status_t SSLSocketDataIO :: SetPrivateKey(const uint8 * bytes, uint32 numBytes)
       EVP_PKEY * pkey = PEM_read_bio_PrivateKey(in, NULL, SSL_get_default_passwd_cb(_ssl), SSL_get_default_passwd_cb_userdata(_ssl));
       if (pkey)
       {
-         if (SSL_use_PrivateKey(_ssl, pkey) == 1) ret = B_NO_ERROR;
+         if (SSL_use_PrivateKey(_ssl, pkey) != 1) ret = B_SSL_ERROR;
          EVP_PKEY_free(pkey);
       }
+      else ret = B_SSL_ERROR;
+
       BIO_free(in);
    }
+   else ret = B_OUT_OF_MEMORY;
+
    return ret;
 }
 
 status_t SSLSocketDataIO :: SetPrivateKey(const ConstByteBufferRef & privateKeyFile)
 {
-   return privateKeyFile() ? SetPrivateKey(privateKeyFile()->GetBuffer(), privateKeyFile()->GetNumBytes()) : B_ERROR;
+   return privateKeyFile() ? SetPrivateKey(privateKeyFile()->GetBuffer(), privateKeyFile()->GetNumBytes()) : B_BAD_ARGUMENT;
 }
 
 status_t SSLSocketDataIO :: SetPublicKeyCertificate(const char * path)
 {
-   if (_ssl == NULL) return B_ERROR;
+   if (_ssl == NULL) return B_BAD_OBJECT;
 
    FileDataIO fdio(muscleFopen(path, "rb"));
-   if (fdio.GetFile() == NULL) return B_ERROR;
+   if (fdio.GetFile() == NULL) return B_FILE_NOT_FOUND;
 
    ByteBufferRef buf = GetByteBufferFromPool((uint32)fdio.GetLength());
-   return ((buf())&&(fdio.ReadFully(buf()->GetBuffer(), buf()->GetNumBytes()) == buf()->GetNumBytes())) ? SetPublicKeyCertificate(buf) : B_ERROR;
+   if (buf() == NULL) RETURN_OUT_OF_MEMORY;
+
+   return (fdio.ReadFully(buf()->GetBuffer(), buf()->GetNumBytes()) == buf()->GetNumBytes()) ? SetPublicKeyCertificate(buf) : B_IO_ERROR;
 }
 
 status_t SSLSocketDataIO :: SetPublicKeyCertificate(const uint8 * bytes, uint32 numBytes)
 {
-   return _ssl ? SetPublicKeyCertificate(GetByteBufferFromPool(numBytes, bytes)) : B_ERROR;
+   return _ssl ? SetPublicKeyCertificate(GetByteBufferFromPool(numBytes, bytes)) : B_BAD_OBJECT;
 }
 
 status_t SSLSocketDataIO :: SetPublicKeyCertificate(const ConstByteBufferRef & buf)
 {
-   if (buf() == NULL) return B_ERROR;
+   if (buf() == NULL) return B_BAD_OBJECT;
 
-   status_t ret = B_ERROR;
+   status_t ret;
 
    BIO * in = BIO_new_mem_buf((void *)buf()->GetBuffer(), buf()->GetNumBytes());
    if (in)
@@ -123,15 +131,16 @@ status_t SSLSocketDataIO :: SetPublicKeyCertificate(const ConstByteBufferRef & b
       X509 * x509Cert = PEM_read_bio_X509(in, NULL, SSL_get_default_passwd_cb(_ssl), SSL_get_default_passwd_cb_userdata(_ssl));
       if (x509Cert)
       {
-         if (SSL_use_certificate(_ssl, x509Cert) == 1)
-         {
-            _publicKey = buf;
-            ret = B_NO_ERROR;
-         }
+         if (SSL_use_certificate(_ssl, x509Cert) == 1) _publicKey = buf;
+                                                  else ret = B_SSL_ERROR;
          X509_free(x509Cert);
       }
+      else ret = B_SSL_ERROR;
+
       BIO_free(in);
    }
+   else ret = B_OUT_OF_MEMORY;
+
    return ret;
 }
 
