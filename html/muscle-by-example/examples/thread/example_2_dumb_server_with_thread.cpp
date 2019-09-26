@@ -43,8 +43,11 @@ public:
    /** Called during setup, when we are first attached to the ReflectServer */
    virtual status_t AttachedToServer()
    {
+      if (_gatewayOK == false) return B_BAD_OBJECT;
+
       // Only agree to be attached to the server if we can start up our internal thread
-      return ((_gatewayOK)&&(DumbReflectSession::AttachedToServer() == B_NO_ERROR)) ? StartInternalThread() : B_ERROR;
+      status_t ret;
+      return DumbReflectSession::AttachedToServer().IsOK(ret) ? StartInternalThread() : ret;
    }
 
    /** Called in the main thread whenever our slave thread has a result Message for us to get
@@ -104,7 +107,7 @@ protected:
 
          return B_NO_ERROR;
       }
-      else return B_ERROR;  // a NULL MessageRef means it's time for us (the internal thread) to go away
+      else return B_ERROR;  // a NULL (msgRef) means it's time for us (the internal thread) to go away; returning an error code will accomplish our demise
    }
 
 private:
@@ -124,11 +127,11 @@ private:
                SetGateway(gw);
                return B_NO_ERROR;
             }
-            else WARN_OUT_OF_MEMORY;
+            else RETURN_OUT_OF_MEMORY;
          }
-         else WARN_OUT_OF_MEMORY;
+         else RETURN_OUT_OF_MEMORY;
       }
-      return B_ERROR;
+      return B_BAD_OBJECT;
    }
 
    bool _gatewayOK;
@@ -151,17 +154,18 @@ int main(int argc, char ** argv)
    // a TCP connection is received on DUMB_SERVER_TCP_PORT, and
    // attach the DumbReflectSession to the ReflectServer for use.
    DumbReflectSessionFactory dumbSessionFactory;
-   if (reflectServer.PutAcceptFactory(DUMB_SERVER_TCP_PORT, ReflectSessionFactoryRef(&dumbSessionFactory, false)) != B_NO_ERROR)
+   status_t ret;
+   if (reflectServer.PutAcceptFactory(DUMB_SERVER_TCP_PORT, ReflectSessionFactoryRef(&dumbSessionFactory, false)).IsError(ret))
    {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't bind to TCP port %u!  (Perhaps a copy of this program is already running?\n", DUMB_SERVER_TCP_PORT);
+      LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't bind to TCP port %u!  (Perhaps a copy of this program is already running?) [%s]\n", DUMB_SERVER_TCP_PORT, ret());
       return 5;
    }
 
    // This session will represent the internal thread.
    ServerThreadSession threadSession;
-   if (reflectServer.AddNewSession(AbstractReflectSessionRef(&threadSession, false)) != B_NO_ERROR)
+   if (reflectServer.AddNewSession(AbstractReflectSessionRef(&threadSession, false)).IsError(ret))
    {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't set up ServerThreadSession!\n");
+      LogTime(MUSCLE_LOG_CRITICALERROR, "Couldn't set up ServerThreadSession! [%s]\n", ret());
       return 5;
    }
 
@@ -170,11 +174,11 @@ int main(int argc, char ** argv)
    LogTime(MUSCLE_LOG_INFO, "\n");
 
    // Our server's event loop will run here -- ServerProcessLoop() return until it's time for the server to exit
-   if (reflectServer.ServerProcessLoop() == B_NO_ERROR)
+   if (reflectServer.ServerProcessLoop().IsOK(ret))
    {
        LogTime(MUSCLE_LOG_INFO, "example_2_dumb_server_with_thread is exiting normally.\n");
    }
-   else LogTime(MUSCLE_LOG_ERROR, "example_2_dumb_server_with_thread is exiting due to an error.\n");
+   else LogTime(MUSCLE_LOG_ERROR, "example_2_dumb_server_with_thread is exiting due to error [%s].\n", ret());
 
    // Make sure our server lets go of all of its sessions and factories
    // before they are destroyed (necessary only because we may have

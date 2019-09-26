@@ -21,7 +21,8 @@ SimulatedMulticastDataIO :: SimulatedMulticastDataIO(const IPAddressAndPort & mu
    , _maxPacketSize(MUSCLE_MAX_PAYLOAD_BYTES_PER_UDP_ETHERNET_PACKET)
    , _isUnicastSocketRegisteredForWrite(false)
 {
-   if (StartInternalThread() != B_NO_ERROR) LogTime(MUSCLE_LOG_ERROR, "SimulatedMulticastDataIO:  Unable to start internal thread for group [%s]\n", multicastAddress.ToString()());
+   status_t ret;
+   if (StartInternalThread().IsError(ret)) LogTime(MUSCLE_LOG_ERROR, "SimulatedMulticastDataIO:  Unable to start internal thread for group [%s] [%s]\n", multicastAddress.ToString()(), ret());
 }
 
 enum {
@@ -86,15 +87,16 @@ static UDPSocketDataIORef CreateMulticastUDPDataIO(const IPAddressAndPort & iap)
    if (udpSock() == NULL) return UDPSocketDataIORef();
 
    // This must be done before adding the socket to any multicast groups, otherwise Windows gets uncooperative
-   if (BindUDPSocket(udpSock, iap.GetPort(), NULL, invalidIP, true) != B_NO_ERROR)
+   status_t errRet;
+   if (BindUDPSocket(udpSock, iap.GetPort(), NULL, invalidIP, true).IsError(errRet))
    {
-      LogTime(MUSCLE_LOG_CRITICALERROR, "Unable to bind multicast socket to UDP port %u!\n", iap.GetPort());
+      LogTime(MUSCLE_LOG_CRITICALERROR, "Unable to bind multicast socket to UDP port %u! [%s]\n", iap.GetPort(), errRet());
       return UDPSocketDataIORef();
    }
 
-   if (AddSocketToMulticastGroup(udpSock, iap.GetIPAddress()) != B_NO_ERROR)
+   if (AddSocketToMulticastGroup(udpSock, iap.GetIPAddress()).IsError(errRet))
    {
-      LogTime(MUSCLE_LOG_ERROR, "CreateMulticastUDPDataIO:  Unable to add UDP socket to multicast address [%s]\n", Inet_NtoA(iap.GetIPAddress())());
+      LogTime(MUSCLE_LOG_ERROR, "CreateMulticastUDPDataIO:  Unable to add UDP socket to multicast address [%s] [%s]\n", Inet_NtoA(iap.GetIPAddress())(), errRet());
       return UDPSocketDataIORef();
    }
 
@@ -119,7 +121,7 @@ static UDPSocketDataIORef CreateUnicastUDPDataIO(uint16 & retPort)
 status_t SimulatedMulticastDataIO :: ReadPacket(DataIO & dio, ByteBufferRef & retBuf)
 {
    if (_scratchBuf() == NULL) _scratchBuf = GetByteBufferFromPool(_maxPacketSize);
-   if ((_scratchBuf() == NULL)||(_scratchBuf()->SetNumBytes(_maxPacketSize, false) != B_NO_ERROR)) return B_ERROR;
+   if ((_scratchBuf() == NULL)||(_scratchBuf()->SetNumBytes(_maxPacketSize, false) != B_NO_ERROR)) return B_OUT_OF_MEMORY;
 
    const int32 bytesRead = dio.Read(_scratchBuf()->GetBuffer(), _scratchBuf()->GetNumBytes());
    if (bytesRead > 0)
@@ -129,13 +131,17 @@ status_t SimulatedMulticastDataIO :: ReadPacket(DataIO & dio, ByteBufferRef & re
       _scratchBuf.Reset();
       return B_NO_ERROR;
    }
-   else return B_ERROR;
+   else return B_IO_ERROR;
 }
 
 status_t SimulatedMulticastDataIO :: SendIncomingDataPacketToMainThread(const ByteBufferRef & data, const IPAddressAndPort & source)
 {
    MessageRef toMainThreadMsg = GetMessageFromPool(SMDIO_COMMAND_DATA);
-   return ((toMainThreadMsg())&&(toMainThreadMsg()->AddFlat(SMDIO_NAME_DATA, data) == B_NO_ERROR)&&(toMainThreadMsg()->AddFlat(SMDIO_NAME_RLOC, source) == B_NO_ERROR)) ? SendMessageToOwner(toMainThreadMsg) : B_ERROR;
+   if (toMainThreadMsg() == NULL) return B_OUT_OF_MEMORY;
+
+   status_t ret;
+   return ((toMainThreadMsg()->AddFlat(SMDIO_NAME_DATA, data).IsOK(ret))
+         &&(toMainThreadMsg()->AddFlat(SMDIO_NAME_RLOC, source).IsOK(ret))) ? SendMessageToOwner(toMainThreadMsg) : ret;
 }
 
 void SimulatedMulticastDataIO :: NoteHeardFromMember(const IPAddressAndPort & heardFromPingSource, uint64 timeStampMicros)
@@ -209,10 +215,10 @@ status_t SimulatedMulticastDataIO :: EnqueueOutgoingMulticastControlCommand(uint
    }
 
    ConstByteBufferRef buf = GetByteBufferFromPool((uint32)(b-pingBuf), pingBuf);
-   if (buf() == NULL) return B_ERROR;
+   if (buf() == NULL) return B_OUT_OF_MEMORY;
 
    Queue<ConstByteBufferRef> * pq = _outgoingPacketsTable.GetOrPut(destIAP);
-   return pq ? pq->AddTail(buf) : B_ERROR;
+   return pq ? pq->AddTail(buf) : B_OUT_OF_MEMORY;
 }
 
 void SimulatedMulticastDataIO :: DrainOutgoingPacketsTable()
@@ -239,11 +245,11 @@ static const uint64 _halfTimeoutPeriodMicros           = _timeoutPeriodMicros/2;
 
 status_t SimulatedMulticastDataIO :: ParseMulticastControlPacket(const ByteBuffer & buf, uint64 now, uint32 & retWhatCode)
 {
-   if (buf.GetNumBytes() < sizeof(uint64)+sizeof(uint32)) return B_ERROR;
+   if (buf.GetNumBytes() < sizeof(uint64)+sizeof(uint32)) return B_BAD_DATA;
 
    const uint8 * b      = buf.GetBuffer();
    const uint64 magic   = B_LENDIAN_TO_HOST_INT64(muscleCopyIn<uint64>(b)); b += sizeof(uint64);
-   if (magic != SIMULATED_MULTICAST_CONTROL_MAGIC) return B_ERROR;
+   if (magic != SIMULATED_MULTICAST_CONTROL_MAGIC) return B_BAD_DATA;
    retWhatCode          = B_LENDIAN_TO_HOST_INT32(muscleCopyIn<uint32>(b)); b += sizeof(uint32);
 
    if (retWhatCode == SMDIO_COMMAND_PONG)

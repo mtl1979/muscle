@@ -26,7 +26,7 @@ namespace muscle {
 FileDescriptorDataIO ::
 FileDescriptorDataIO(const ConstSocketRef & fd, bool blocking) : _fd(fd), _dofSyncOnClose(false)
 {
-   SetBlockingIOEnabled(blocking);
+   (void) SetBlockingIOEnabled(blocking);
 }
 
 FileDescriptorDataIO ::
@@ -76,13 +76,9 @@ status_t FileDescriptorDataIO :: SetBlockingIOEnabled(bool blocking)
          _blocking = blocking;
          return B_NO_ERROR;
       }
-      else
-      {
-         perror("FileDescriptorDataIO:SetBlockingIO failed");
-         return B_ERROR;
-      }
+      else return B_ERRNO;
    }
-   else return B_ERROR;
+   else return B_BAD_OBJECT;
 }
 
 void FileDescriptorDataIO :: Shutdown()
@@ -93,23 +89,22 @@ void FileDescriptorDataIO :: Shutdown()
 status_t FileDescriptorDataIO :: Seek(int64 offset, int whence)
 {
    const int fd = _fd.GetFileDescriptor();
-   if (fd >= 0)
+   if (fd < 0) return B_BAD_OBJECT;
+
+   switch(whence)
    {
-      switch(whence)
-      {
-         case IO_SEEK_SET:  whence = SEEK_SET;  break;
-         case IO_SEEK_CUR:  whence = SEEK_CUR;  break;
-         case IO_SEEK_END:  whence = SEEK_END;  break;
-         default:           return B_ERROR;
-      }
-#ifdef MUSCLE_USE_LLSEEK
-      loff_t spot;
-      return (_llseek(fd, (uint32)((offset >> 32) & 0xFFFFFFFF), (uint32)(offset & 0xFFFFFFFF), &spot, whence) >= 0) ? B_NO_ERROR : B_ERROR;
-#else
-      return (lseek(fd, (off_t) offset, whence) >= 0) ? B_NO_ERROR : B_ERROR;
-#endif
+      case IO_SEEK_SET:  whence = SEEK_SET;  break;
+      case IO_SEEK_CUR:  whence = SEEK_CUR;  break;
+      case IO_SEEK_END:  whence = SEEK_END;  break;
+      default:           return B_BAD_ARGUMENT;
    }
-   return B_ERROR;
+
+#ifdef MUSCLE_USE_LLSEEK
+   loff_t spot;
+   return (_llseek(fd, (uint32)((offset >> 32) & 0xFFFFFFFF), (uint32)(offset & 0xFFFFFFFF), &spot, whence) >= 0) ? B_NO_ERROR : B_ERRNO;
+#else
+   return (lseek(fd, (off_t) offset, whence) >= 0) ? B_NO_ERROR : B_ERRNO;
+#endif
 }
 
 int64 FileDescriptorDataIO :: GetPosition() const
