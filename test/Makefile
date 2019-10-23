@@ -24,6 +24,7 @@ DEFINES += -DMUSCLE_AVOID_SIGNAL_HANDLING
 #DEFINES += -DMUSCLE_COUNT_STRING_COPY_OPERATIONS
 #DEFINES += -DMUSCLE_NO_EXCEPTIONS
 #DEFINES += -DMUSCLE_AVOID_STDINT
+#DEFINES += -DMUSCLE_ENABLE_AUTHORIZATION_EXECUTE_WITH_PRIVILEGES
 
 CFLAGS = -I.. -I../zlib/zlib -g
 #CFLAGS += -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.14.sdk
@@ -34,7 +35,7 @@ CXXFLAGS += -std=c++11
 
 LFLAGS =
 LIBS =  -lpthread
-EXECUTABLES = testhashtable microchatclient testmini testfilepathinfo testmicro microreflectclient minireflectclient minichatclient testmessage testclone testzip testrefcount testqueue testtuple testgateway calctypecode printtypecode portablereflectclient portscan striphextermoutput testudp testsocketmultiplexer testpackettunnel testpacketio teststatus teststring testbitchord testhashcodes testbytebuffer testmatchfiles testparsefile testtime deadlockfinder deadlock testendian testsysteminfo portableplaintextclient uploadstress bandwidthtester readmessage testregex testnagle testresponse testqueryfilter testtypedefs hexterm udpproxy serialproxy printsourcelocations findsourcelocations svncopy testserial chatclient testpulsenode testnetconfigdetect testnetutil testpool testbatchguard testthread testthreadpool testobjectpool
+EXECUTABLES = testhashtable microchatclient testmini testfilepathinfo testmicro microreflectclient minireflectclient minichatclient testmessage testclone testzip testrefcount testqueue testtuple testgateway calctypecode printtypecode portablereflectclient portscan striphextermoutput testudp testsocketmultiplexer testpackettunnel testpacketio teststatus teststring testbitchord testhashcodes testbytebuffer testmatchfiles testparsefile testtime testtimeunitconversions deadlockfinder deadlock testendian testsysteminfo portableplaintextclient uploadstress bandwidthtester readmessage testregex testnagle testresponse testqueryfilter testtypedefs hexterm udpproxy serialproxy printsourcelocations findsourcelocations svncopy testserial chatclient testpulsenode testnetconfigdetect testnetutil testpool testbatchguard testthread testthreadpool testobjectpool
 REGEXOBJS =
 ZLIBOBJS = adler32.o deflate.o trees.o zutil.o inflate.o inftrees.o inffast.o crc32.o compress.o gzclose.o gzread.o gzwrite.o gzlib.o
 ZIPOBJS = zip.o unzip.o ioapi.o
@@ -101,7 +102,7 @@ ifeq ($(OSTYPE),DragonFly)
 endif
 
 ifeq ($(OSTYPE),Darwin)
-   LIBS += -framework IOKit -framework Carbon -framework SystemConfiguration
+   LIBS += -framework IOKit -framework Carbon -framework SystemConfiguration -framework Security
    CXXFLAGS += -stdlib=libc++
 endif
 
