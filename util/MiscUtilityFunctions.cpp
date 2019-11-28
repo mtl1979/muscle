@@ -807,7 +807,7 @@ String CleanupDNSLabel(const String & s, const String & optAdditionalAllowedChar
       }
    }
    while(ret.EndsWith('-')) ret -= '-';  // remove any trailing dashes
-   return ret;
+   return ret.Trim();
 }
 
 String CleanupDNSPath(const String & orig, const String & optAdditionalAllowedChars)
