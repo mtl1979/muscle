@@ -62,7 +62,12 @@ DoOutputImplementation(uint32 maxBytes)
       }
       return totalNumBytesSent;
    }
-   else return DoOutputImplementationAux(maxBytes, 0);  // stream-based implementation is here
+   else
+   {
+      const int32 ret = DoOutputImplementationAux(maxBytes, 0);  // stream-based implementation is here
+      if ((ret >= 0)&&(HasBytesToOutput() == false)) GetDataIO()()->FlushOutput();
+      return ret;
+   }
 }
 
 int32
