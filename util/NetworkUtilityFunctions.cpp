@@ -1014,6 +1014,46 @@ bool GetSocketNaglesAlgorithmEnabled(const ConstSocketRef & sock)
 #endif
 }
 
+status_t SetSocketCorkAlgorithmEnabled(const ConstSocketRef & sock, bool enabled)
+{
+#if defined(__linux__) || defined(__FreeBSD__) || defined(BSD) || defined(__APPLE__)
+   const int fd = sock.GetFileDescriptor();
+   if (fd < 0) return B_BAD_ARGUMENT;
+
+   const int iEnabled = enabled;  // it's gotta be an int!
+# if defined(__linux__)
+   const int corkOpt = TCP_CORK;
+# else
+   const int corkOpt = TCP_NOPUSH;
+# endif
+   return (setsockopt(fd, IPPROTO_TCP, corkOpt, (const sockopt_arg *) &iEnabled, sizeof(iEnabled)) == 0) ? B_NO_ERROR : B_ERRNO;
+#else
+   (void) sock;
+   (void) enabled;
+   return B_UNIMPLEMENTED;
+#endif
+}
+
+bool GetSocketCorkAlgorithmEnabled(const ConstSocketRef & sock)
+{
+#if defined(__linux__) || defined(__FreeBSD__) || defined(BSD) || defined(__APPLE__)
+   const int fd = sock.GetFileDescriptor();
+   if (fd < 0) return false;
+
+   int enabled;
+   socklen_t len = sizeof(enabled);
+# if defined(__linux__)
+   const int corkOpt = TCP_CORK;
+# else
+   const int corkOpt = TCP_NOPUSH;
+# endif
+   return (getsockopt(fd, IPPROTO_TCP, corkOpt, (sockopt_arg *) &enabled, &len) == 0) ? (bool)enabled : false;
+#else
+   (void) sock;
+   return false;
+#endif
+}
+
 status_t FinalizeAsyncConnect(const ConstSocketRef & sock)
 {
    TCHECKPOINT;

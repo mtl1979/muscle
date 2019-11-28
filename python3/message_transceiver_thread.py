@@ -10,6 +10,7 @@ __date__      = "$Date: 2005/07/06 23:41:33 $"
 __copyright__ = "Copyright (c) 2000-2013 Meyer Sound Laboratories Inc"
 __license__   = "See enclosed LICENSE.TXT file"
 
+import errno
 import message
 import threading
 import queue
@@ -48,6 +49,9 @@ def CreateConnectedSocketPair(blockingMode):
    socketA.setblocking(blockingMode)
    return (socketA, socketB)
 
+class TimeForMessageTransceiverThreadToGoAwayException(Exception):
+   pass
+
 class MessageTransceiverThread(threading.Thread):
    """Python implementation of the MUSCLE MessageTransceiverThread class.
 
@@ -85,7 +89,7 @@ class MessageTransceiverThread(threading.Thread):
       self.__preferIPv6   = preferIPv6
 
       # Used internally by the MessageTransceiverThread class, to clean up
-      self._endSession = IOError()
+      self._endSession = TimeForMessageTransceiverThreadToGoAwayException()
 
       # Set up for accepting incoming TCP connections, if necessary
       if self.__hostname is None:
@@ -118,7 +122,7 @@ class MessageTransceiverThread(threading.Thread):
          This method is typically called by your main thread of execution."""
       if (self.__outQ is not None):
          self.SendOutgoingMessage(self._endSession)  # special 'please die' code
-         self.join()                            # wait for the internal thread to go away
+         self.join()                                 # wait for the internal thread to go away
          self.__outQ = None
          self.__inQ  = None
          if self.__mainsocket is not None:
@@ -240,7 +244,7 @@ class MessageTransceiverThread(threading.Thread):
                # Note that we don't need to do anything with the data we read from
                # threadsocket; it's enough that it woke us up so we can check the out-queue.
                if self.__threadsocket in inready and not self.__threadsocket.recv(1024):
-                     raise self._endSession
+                  raise self._endSession
 
                if toremote in outready:
                   if self._connectStillInProgress:
@@ -269,13 +273,10 @@ class MessageTransceiverThread(threading.Thread):
                   toremote = None # for accepting sessions, we can disconnect and then go back to waiting for an accept
                else:
                   raise # for connecting sessions, the first disconnection means game over, so rethrow
-      except socket.error as err:
+      except OSError as err:
          self.__sendReplyToMainThread(MTT_EVENT_DISCONNECTED)
-      except IOError as inst:
-         if (inst == self._endSession):
-            pass  # this exception just means to end the thread without comment
-         else:
-            raise
+      except TimeForMessageTransceiverThreadToGoAwayException:
+         pass
 
       if toremote is not None:
          toremote.close()
@@ -393,7 +394,7 @@ if __name__ == "__main__":
    mtt.start()  # important!  Otherwise nothing will happen :^)
    while True:
       nextline = sys.stdin.readline().strip()
-      if nextline == "q":
+      if (not nextline) or (nextline == "q"):
          mtt.Destroy()
          print("Bye bye!")
          sys.exit()
