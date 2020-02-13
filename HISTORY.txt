@@ -5,6 +5,31 @@ key:  - new feature
       * bug fixed
       o other
 
+7.53 Released 2/13/2020
+   - Added a new FlushOutput() virtual method to the
+     AbstractMessageIOGateway class, in case a subclass
+     needs to hook into the gateway's flush-output functionality.
+   - Added a ParseArgs(const Queue<String> &, Message &, bool)
+     convenience-method to MiscUtilityFunctions.{cpp,h}.
+   - hexterm now reports more details about certain network errors.
+   - Updated the MacOSX/iOS implementation of GetNetworkInterfaceInfos()
+     to call ioctl(SIOCGIFFUNCTIONALTYPE) to disambiguate the device-type
+     of a network-interface device.
+   o Added the MUSCLE_CONSTEXPR tag to the TimeUnitConversionFunctions
+     so that they can be evaluated at compile time when possible.
+   o Modified SharedFilterSessionFactory.cpp to treat an all-zeros
+     shared memory region the same as a non-existent one (so that
+     we no longer have to delete the memory region just to return the
+     filter's behavior to its default state)
+   o Moved the FlushOutput() calls for the gateway classes up into
+     AbstractMessageIOGateway::DoOutput() so that it only needs to
+     be implemented in one place rather than separately in each subclass.
+   o Modified the gateway classes to fail gracefully if GetDataIO()
+     returns a NULL reference, instead of dereferencing a NULL pointer.
+   o Updated the friend-template workaround in Hashtable.h to apply
+     to all versions of GCC, to avoid having to update the code
+     every time a new version of GCC comes out with the bug still unfixed.
+
 7.52 Released 11/28/2019
    - Enabled bitcode-generation for iOS in the CMakeLists.txt file.
    - Added SetSocketCorkAlgorithmEnabled() and GetSocketCorkAlgorithmEnabled()
