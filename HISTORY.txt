@@ -5,6 +5,20 @@ key:  - new feature
       * bug fixed
       o other
 
+7.54 Released 3/20/2020
+   - Added a B_ERRNUM(e) macro that works similarly to B_ERRNO, except
+     it calls strerror() with the passed-in integer value rather than
+     calling strerror(errno).
+   - Added a TryLock() method to the Mutex class.
+   - Added a WithReplacements() method to the String class that takes
+     a (const Hashtable<String,String> &) argument, for doing multiple
+     simultaneous search-and-replace operations at one time.
+   * Fixed the handling of RTM_NEWADDR and RTM_DELADDR messages in the
+     Linux implementation of DetectNetworkConfigChangesSession.
+   * Tweaked the Windows #ifdef's in ChildProcessDataIO.cpp per Mika
+   * Return values of pthreads functions weren't being used correctly
+     to set status_t results on error.  Fixed.
+
 7.53 Released 2/13/2020
    - Added a new FlushOutput() virtual method to the
      AbstractMessageIOGateway class, in case a subclass
