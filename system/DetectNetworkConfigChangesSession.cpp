@@ -37,7 +37,9 @@
 
 #ifdef __linux__
 # include <asm/types.h>
+# include <sys/types.h>
 # include <sys/socket.h>
+# include <net/if.h>
 # include <linux/netlink.h>
 # include <linux/rtnetlink.h>
 #endif
@@ -260,7 +262,7 @@ int32 DetectNetworkConfigChangesSession :: DoInput(AbstractGatewayMessageReceive
    int msgLen = recvmsg(fd, &msg, 0);
    if (msgLen >= 0)  // FogBugz #9620
    {
-      for (struct nlmsghdr *nh = (struct nlmsghdr *)buf; ((sendReport == false)&&(NLMSG_OK(nh, (unsigned int)msgLen))); nh=NLMSG_NEXT(nh, msgLen))
+      for (struct nlmsghdr *nh = (struct nlmsghdr *)buf; NLMSG_OK(nh, (unsigned int)msgLen); nh=NLMSG_NEXT(nh, msgLen))
       {
          /* The end of multipart message. */
          if (nh->nlmsg_type == NLMSG_DONE) break;
@@ -268,7 +270,7 @@ int32 DetectNetworkConfigChangesSession :: DoInput(AbstractGatewayMessageReceive
          {
             switch(nh->nlmsg_type)
             {
-               case RTM_NEWLINK: case RTM_DELLINK: case RTM_NEWADDR: case RTM_DELADDR:
+               case RTM_NEWLINK: case RTM_DELLINK:
                {
                   struct ifinfomsg * iface = (struct ifinfomsg *) NLMSG_DATA(nh);
                   int nextLen = nh->nlmsg_len - NLMSG_LENGTH(sizeof(*iface));
@@ -276,6 +278,25 @@ int32 DetectNetworkConfigChangesSession :: DoInput(AbstractGatewayMessageReceive
                      if (a->rta_type == IFLA_IFNAME)
                        (void) _pendingChangedInterfaceNames.PutWithDefault((const char *) RTA_DATA(a));
                   sendReport = true;
+               }
+               break;
+
+               case RTM_NEWADDR: case RTM_DELADDR:
+               {
+                  struct ifaddrmsg * ifa = (struct ifaddrmsg *) NLMSG_DATA(nh);
+                  struct rtattr *rth = IFA_RTA(ifa);
+                  int rtl = IFA_PAYLOAD(nh);
+                  while(rtl && RTA_OK(rth, rtl))
+                  {
+                     if (rth->rta_type == IFA_LOCAL)
+                     {
+                        char ifName[IFNAMSIZ];
+                        (void) if_indextoname(ifa->ifa_index, ifName);
+                        (void) _pendingChangedInterfaceNames.PutWithDefault(ifName);
+                        sendReport = true;  // FogBugz #17683:  only notify if IFA_LOCAL was specified, to avoid getting spammed about IFA_CACHEINFO
+                     }
+                     rth = RTA_NEXT(rth, rtl);
+                  }
                }
                break;
 
